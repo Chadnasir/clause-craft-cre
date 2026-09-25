@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clause Craft — CRE Contract Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">CC</div>
+      <div class="brand-text">
+        <h1>Clause Craft</h1>
+        <p class="tagline">Contract review that sits beside your document — built for CRE leases &amp; PSAs.</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-ghost" id="btn-load-demo" title="Load demo Southern OC office lease">Load Demo Lease</button>
+      <label class="btn btn-ghost file-label" title="Upload .txt or .md">
+        Upload
+        <input type="file" id="file-input" accept=".txt,.md,text/plain,text/markdown" hidden />
+      </label>
+      <button type="button" class="btn btn-ghost" id="btn-export">Export HTML</button>
+      <button type="button" class="btn btn-ghost" id="btn-print">Print</button>
+      <button type="button" class="btn btn-primary" id="btn-run-review">Run Review</button>
+    </div>
+  </header>
+
+  <div class="contact-strip">
+    <span>Chad Nasir · CRE Broker</span>
+    <span class="sep">·</span>
+    <a href="tel:9493580056">(949) 358-0056</a>
+    <span class="sep">·</span>
+    <a href="mailto:sales@realestateca.org">sales@realestateca.org</a>
+  </div>
+
+  <main class="workspace">
+    <section class="editor-pane" aria-label="Document editor">
+      <div class="floating-toolbar" id="floating-toolbar" role="toolbar" aria-label="Formatting">
+        <button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button>
+        <button type="button" data-cmd="italic" title="Italic"><em>I</em></button>
+        <button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+        <button type="button" data-cmd="undo" title="Undo">↶</button>
+      </div>
+      <div class="desk">
+        <article
+          id="editor"
+          class="page"
+          contenteditable="true"
+          spellcheck="true"
+          role="textbox"
+          aria-multiline="true"
+          aria-label="Contract document"
+        ></article>
+      </div>
+    </section>
+
+    <aside class="sidebar" aria-label="Clause Craft review panel">
+      <nav class="sidebar-tabs" role="tablist">
+        <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="review">Review</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="clauses">Clauses</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="ask">Ask</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="summary">Summary</button>
+      </nav>
+
+      <div class="sidebar-body">
+        <div class="tab-panel active" id="panel-review" role="tabpanel">
+          <div class="panel-intro">
+            <h2>Contract Review</h2>
+            <p>Scan this document for common CRE lease &amp; PSA clauses. Rule-based heuristics — no cloud, no API keys.</p>
+            <button type="button" class="btn btn-primary btn-block" id="btn-run-review-side">Run Review</button>
+          </div>
+          <div id="review-stats" class="review-stats hidden"></div>
+          <div id="review-results" class="review-results"></div>
+        </div>
+
+        <div class="tab-panel" id="panel-clauses" role="tabpanel" hidden>
+          <div class="panel-intro">
+            <h2>Detected Clauses</h2>
+            <p>Click a clause to jump and highlight it. Accept applies a redline suggestion; Reject dismisses.</p>
+          </div>
+          <div id="clause-list" class="clause-list"></div>
+        </div>
+
+        <div class="tab-panel" id="panel-ask" role="tabpanel" hidden>
+          <div class="panel-intro">
+            <h2>Ask the Document</h2>
+            <p>Keyword-matched CRE Q&amp;A over the current text. Try the chips or type your own.</p>
+            <div class="ask-chips">
+              <button type="button" class="chip" data-q="Who can terminate?">Who can terminate?</button>
+              <button type="button" class="chip" data-q="What's the NNN?">What's the NNN?</button>
+              <button type="button" class="chip" data-q="Summarize risks">Summarize risks</button>
+              <button type="button" class="chip" data-q="What is the rent?">What is the rent?</button>
+              <button type="button" class="chip" data-q="Governing law?">Governing law?</button>
+              <button type="button" class="chip" data-q="Insurance requirements?">Insurance?</button>
+            </div>
+          </div>
+          <div id="ask-chat" class="ask-chat" aria-live="polite"></div>
+          <form id="ask-form" class="ask-form">
+            <input type="text" id="ask-input" placeholder="Ask about this lease or PSA…" autocomplete="off" />
+            <button type="submit" class="btn btn-primary">Ask</button>
+          </form>
+        </div>
+
+        <div class="tab-panel" id="panel-summary" role="tabpanel" hidden>
+          <div class="panel-intro">
+            <h2>Agreement Summary</h2>
+            <p>One-click plain-language overview of parties, term, money, and key risks.</p>
+            <button type="button" class="btn btn-primary btn-block" id="btn-summary">Generate Summary</button>
+          </div>
+          <div id="summary-output" class="summary-output"></div>
+        </div>
+      </div>
+
+      <footer class="sidebar-footer">
+        <p class="disclaimer">Demo only — not legal advice. Have counsel review before signing.</p>
+      </footer>
+    </aside>
+  </main>
+
+  <footer class="app-footer">
+    <p class="disclaimer">Demo only — not legal advice. Have counsel review before signing. Clause Craft is an offline assistant for CRE brokers — not a law firm.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
