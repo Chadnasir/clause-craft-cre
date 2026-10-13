@@ -10,7 +10,7 @@ Two ways to use it, same review engine (`engine/clause-engine.js`):
 Everything runs on your computer. No AI service, no API keys, no account, and the contract text is never uploaded.
 
 - Browser version: https://chadnasir.github.io/clause-craft-cre/
-- Windows download (browser version + Word installer): build with `node tools/package.mjs`, or use the zip you were sent
+- Download for Windows (browser version + Word installer, with steps): https://chadnasir.github.io/clause-craft-cre/download/
 - Repo: https://github.com/Chadnasir/clause-craft-cre
 
 ## What it does
@@ -69,7 +69,8 @@ Contract text stays on the computer. The only files loaded from the internet are
 | `word/taskpane.*`, `word/commands.html`, `word/assets/` | Word task pane and ribbon icons |
 | `index.html`, `app.js`, `styles.css` | Browser version |
 | `windows/` | `Install in Word.cmd`, `Uninstall from Word.cmd`, `START HERE.html` for the Windows download |
-| `tools/package.mjs` | Builds `dist/Clause-Craft-for-Windows.zip` |
+| `tools/package.mjs` | Builds `dist/Clause-Craft-for-Windows.zip` and the files behind the download page |
+| `download/` | Download page with install steps, the Windows zip and the add-in manifest (served by GitHub Pages) |
 | `tests/` | Engine tests, Word add-in tests (Office.js simulator), browser tests, .docx fixtures |
 
 ## Publish an update
@@ -77,7 +78,7 @@ Contract text stays on the computer. The only files loaded from the internet are
 ```
 git push origin main            # the code
 git push origin main:gh-pages   # what Word and the browser link load
-node tools/package.mjs          # new Windows download in dist/
+node tools/package.mjs          # new Windows download in dist/ and download/ (commit download/ before pushing gh-pages)
 ```
 
 ## Run the tests

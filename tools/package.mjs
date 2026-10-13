@@ -1,4 +1,4 @@
-// Builds the Windows download: dist/Clause-Craft-for-Windows.zip
+// Builds the Windows download: dist/Clause-Craft-for-Windows.zip, plus download/ for the GitHub Pages download page
 //
 //   Clause Craft/
 //     START HERE.html             how to use it (browser, desktop Word, Word on the web)
@@ -80,4 +80,7 @@ mkdirSync(join(OUT, "Clause Craft", "files", "engine"), { recursive: true });
 for (const [name, data] of entries) writeFileSync(join(OUT, "Clause Craft", name), data);
 const zipped = zip(entries.map(([name, data]) => [TOP + name, data]));
 writeFileSync(join(OUT, "Clause-Craft-for-Windows.zip"), zipped);
-console.log("dist/Clause-Craft-for-Windows.zip  " + Math.round(zipped.length / 1024) + " KB, " + entries.length + " files");
+// The download page (download/index.html, served by GitHub Pages) links to these two files.
+writeFileSync(join(ROOT, "download", "Clause-Craft-for-Windows.zip"), zipped);
+writeFileSync(join(ROOT, "download", "Clause-Craft-manifest.xml"), manifest);
+console.log("dist/Clause-Craft-for-Windows.zip and download/  " + Math.round(zipped.length / 1024) + " KB, " + entries.length + " files");
