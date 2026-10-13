@@ -1,0 +1,17 @@
+{
+  "name": "clause-craft-cre",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Clause Craft: CRE lease and PSA review for the browser and as a Microsoft Word add-in.",
+  "scripts": {
+    "test": "node --test tests/engine.test.js",
+    "test:ui": "node tests/run-ui-tests.mjs",
+    "test:web": "node tests/run-web-tests.mjs",
+    "test:all": "node --test tests/engine.test.js && node tests/run-ui-tests.mjs && node tests/run-web-tests.mjs",
+    "package": "node tools/package.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1"
+  },
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clause Craft - Start Here</title>
+  <style>
+    :root { --navy: #0B2C5F; --navy-soft: #E8EEF6; --orange: #FF6A00; --ink: #1A1F2E; --muted: #5A6478; --line: #D8DEE8; --bg: #F4F6F9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif; }
+    header { background: var(--navy); color: #fff; border-bottom: 3px solid var(--orange); padding: 22px 20px; }
+    header .wrap { display: flex; align-items: center; gap: 14px; }
+    .mark { width: 42px; height: 42px; border-radius: 10px; background: var(--orange); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+    h1 { margin: 0; font-size: 1.35rem; }
+    header p { margin: 2px 0 0; opacity: 0.85; font-size: 0.9rem; }
+    .wrap { max-width: 780px; margin: 0 auto; }
+    main { padding: 20px 16px 40px; }
+    section { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+    h2 { margin: 0 0 4px; font-size: 1.08rem; color: var(--navy); }
+    .tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--navy-soft); color: var(--navy); font-size: 0.72rem; font-weight: 700; vertical-align: 2px; }
+    .lead { margin: 0 0 10px; color: var(--muted); }
+    ol, ul { margin: 8px 0 0; padding-left: 22px; }
+    li { margin: 5px 0; }
+    .file { font-weight: 700; color: var(--navy); }
+    code { background: var(--navy-soft); padding: 1px 6px; border-radius: 4px; font-size: 0.9em; }
+    .note { margin: 10px 0 0; padding: 9px 12px; border-left: 3px solid var(--orange); background: #FFF6EE; font-size: 0.9rem; }
+    a { color: var(--navy); }
+    footer { color: var(--muted); font-size: 0.82rem; text-align: center; padding: 0 16px 30px; }
+    @media (max-width: 520px) { section { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="mark">CC</div>
+      <div>
+        <h1>Clause Craft &mdash; start here</h1>
+        <p>CRE lease and purchase agreement review. Runs on your computer; your contracts are not uploaded anywhere.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section>
+      <h2>1. Use it in your browser <span class="tag">Nothing to install</span></h2>
+      <p class="lead">Works offline, straight from this folder.</p>
+      <ol>
+        <li>Double-click <span class="file">Clause Craft.html</span> (it opens in Edge or Chrome).</li>
+        <li>Click <b>Upload</b> and pick your lease or PSA (<code>.docx</code>), or drag the file onto the page.</li>
+        <li>Pick your side and click <b>Start review</b>. Accept the redlines you want.</li>
+        <li>Click <b>Download .docx</b>. It opens in Word with every change as a tracked change.</li>
+      </ol>
+      <p class="note">On another computer, open <a href="https://chadnasir.github.io/clause-craft-cre/">chadnasir.github.io/clause-craft-cre</a>. It's the same tool, and it still runs on that computer.</p>
+    </section>
+
+    <section>
+      <h2>2. Add it to Word on this PC <span class="tag">Desktop Word</span></h2>
+      <p class="lead">For Microsoft 365, or Word 2016 or later, on Windows.</p>
+      <ol>
+        <li>Double-click <span class="file">Install in Word</span>. If Windows warns you about the file, click <b>More info</b>, then <b>Run anyway</b>.</li>
+        <li>If Word is open, save your work and press <b>Y</b>. Word restarts and opens a demo lease with the Clause Craft panel on the right.</li>
+        <li>After that, open any lease or PSA and click <b>Home &rsaquo; Review Contract</b>.</li>
+      </ol>
+      <p class="note">Word needs an internet connection to open the Clause Craft panel, which loads from GitHub Pages. The review itself runs inside Word.</p>
+    </section>
+
+    <section>
+      <h2>3. Word on the web <span class="tag">OneDrive</span></h2>
+      <ol>
+        <li>Open your document in Word on the web.</li>
+        <li>Click <b>Home &rsaquo; Add-ins &rsaquo; More Settings &rsaquo; Upload My Add-in</b>.</li>
+        <li>Click <b>Browse</b>, pick <span class="file">Clause Craft manifest.xml</span> from this folder, then click <b>Upload</b>.</li>
+        <li>Click <b>Home &rsaquo; Review Contract</b>.</li>
+      </ol>
+      <p class="note">Word on the web keeps the add-in until you clear that browser's history and cache. If that happens, upload the manifest again.</p>
+    </section>
+
+    <section>
+      <h2>What's in the panel</h2>
+      <ul>
+        <li><b>Review:</b> risky clauses with suggested redlines, missing clauses, and checks on dates, rent math, defined terms and section references. You can review the whole document or just a selection.</li>
+        <li><b>Playbook:</b> your own numbers (late charge, cure periods, deposit, due diligence and more), checked against the document and redlined to your standard. Click <b>Edit standards</b> to set them.</li>
+        <li><b>Draft:</b> option to extend, early termination, free rent, TI allowance and more, written with your numbers. You can also save language you like to <b>My clauses</b>.</li>
+        <li><b>Ask:</b> questions about the document, with the section cited. <b>Explain selected text</b> gives a plain-English read of any clause.</li>
+        <li><b>Summary:</b> key terms, plus an issues list for the other side that you can insert or copy into an email.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>If something doesn't work</h2>
+      <ul>
+        <li><b>No Review Contract button:</b> make sure every Word window was closed, then reopen Word. Check that Word isn't still running in Task Manager (<code>WINWORD.EXE</code>).</li>
+        <li><b>The panel stays blank:</b> check the internet connection, then close and reopen the panel.</li>
+        <li><b>Comments and tracked changes:</b> these need Microsoft 365, Word 2024 or Word on the web. Older versions of Word show redlines as red and blue text instead.</li>
+        <li><b>Work computer:</b> your IT settings may block add-ins. The browser version (step 1) still works.</li>
+        <li><b>Remove it:</b> double-click <span class="file">Uninstall from Word.cmd</span>.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>Clause Craft is a rule-based first pass, not legal advice. Have counsel review before signing.</footer>
+</body>
+</html>
