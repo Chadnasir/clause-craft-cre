@@ -20,9 +20,9 @@
     </div>
     <div class="header-actions">
       <button type="button" class="btn btn-ghost" id="btn-load-demo" title="Load demo Southern OC office lease">Load Demo Lease</button>
-      <label class="btn btn-ghost file-label" title="Upload .txt or .md">
+      <label class="btn btn-ghost file-label" id="file-label" tabindex="0" role="button" title="Open a .docx, .txt or .md contract (stays on this computer)">
         Upload
-        <input type="file" id="file-input" accept=".txt,.md,text/plain,text/markdown" hidden />
+        <input type="file" id="file-input" accept=".docx,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown" hidden />
       </label>
       <button type="button" class="btn btn-ghost" id="btn-export">Export HTML</button>
       <button type="button" class="btn btn-ghost" id="btn-print">Print</button>
@@ -126,6 +126,8 @@
     <p class="disclaimer">Demo only — not legal advice. Have counsel review before signing. Clause Craft is an offline assistant for CRE brokers — not a law firm.</p>
   </footer>
 
+  <script src="engine/clause-engine.js"></script>
+  <script src="engine/demo-docs.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -43,7 +43,8 @@ test("lease, tenant side: key risks are flagged", () => {
   for (const id of ["assign-sole-discretion", "assign-recapture", "assign-profit-100", "opex-no-cap", "opex-capital",
     "indemnity-own-negligence", "snda-missing", "relocation", "holdover-rate", "default-no-notice",
     "default-short-nonmonetary", "personal-guaranty", "landlord-lien", "entry-any-time", "late-charge-high",
-    "utility-no-abatement", "casualty-no-tenant-termination", "number-mismatch", "ca-jury-waiver", "as-is-delivery"]) {
+    "utility-no-abatement", "casualty-no-tenant-termination", "number-mismatch", "ca-jury-waiver", "as-is-delivery",
+    "alterations-sole-discretion"]) {
     assert.ok(ids(r.findings).includes(id), "missing finding " + id);
   }
   assert.ok(cats(r.missing).includes("casp"), "CASp disclosure should be missing (California lease)");

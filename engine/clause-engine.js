@@ -1,11 +1,11 @@
 /**
- * Clause Craft — CRE contract review engine (rule-based, runs entirely on the device).
+ * Clause Craft - CRE contract review engine (rule-based, runs entirely on the device).
  *
  * Shared by the browser app (index.html + app.js) and the Word add-in (word/taskpane.html).
  * Input is a list of paragraphs (Word body paragraphs) or a plain-text string.
  * Nothing here makes network calls, stores data, or uses eval.
  *
- * Demo only — not legal advice. Findings are heuristics for a broker's first pass;
+ * Demo only - not legal advice. Findings are heuristics for a broker's first pass;
  * have counsel review before signing.
  */
 (function (root, factory) {
@@ -24,10 +24,10 @@
   // Same-length normalisation so match offsets map 1:1 back to the original text.
   function norm(s) {
     return String(s == null ? "" : s)
-      .replace(/[‘’ʼ′]/g, "'")
-      .replace(/[“”″]/g, "\"")
-      .replace(/[   ]/g, " ")
-      .replace(/[‐‑‒–—]/g, "-")
+      .replace(/[\u2018\u2019\u02BC\u2032]/g, "'")
+      .replace(/[\u201C\u201D\u2033]/g, "\"")
+      .replace(/[\u00A0\u2007\u202F]/g, " ")
+      .replace(/[\u2010\u2011\u2012\u2013\u2014]/g, "-")
       .replace(/[\u000B\u0007]/g, " ");
   }
 
@@ -35,7 +35,7 @@
 
   function clip(s, n) {
     s = trim(String(s == null ? "" : s).replace(/\s+/g, " "));
-    return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s;
+    return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "\u2026" : s;
   }
 
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
@@ -324,7 +324,7 @@
     renewal_option: { title: "Option to extend", category: "renewal_option", text: "Option to Extend. Tenant shall have one (1) option to extend the Term for five (5) years by giving Landlord written notice not less than nine (9) nor more than twelve (12) months before the Expiration Date. Base Rent for the extension term shall be ninety-five percent (95%) of the fair market rent for comparable space in comparable buildings in the area, determined as of the commencement of the extension term." },
     audit: { title: "Operating expense audit", category: "audit", text: "Audit. Within one hundred eighty (180) days after receiving Landlord's annual statement of Operating Expenses, Tenant may audit Landlord's books and records relating to Operating Expenses for that year. If the audit shows that Tenant was overcharged, Landlord shall refund the overcharge within thirty (30) days, and if the overcharge exceeds five percent (5%), Landlord shall also reimburse Tenant's reasonable audit costs." },
     opex_cap: { title: "Cap on controllable expenses", category: "operating_expenses", text: "Notwithstanding anything to the contrary in this Lease, Tenant's Share of Controllable Operating Expenses (all Operating Expenses other than real property taxes, insurance premiums and utility costs) shall not increase by more than five percent (5%) per calendar year, on a non-cumulative basis, over the amount payable for the prior calendar year." },
-    casp: { title: "CASp disclosure (Cal. Civ. Code §1938)", category: "casp", text: "CASp Disclosure. For purposes of California Civil Code Section 1938, Landlord states that the Premises have not undergone inspection by a Certified Access Specialist (CASp). A Certified Access Specialist (CASp) can inspect the subject premises and determine whether the subject premises comply with all of the applicable construction-related accessibility standards under state law. Although state law does not require a CASp inspection of the subject premises, the commercial property owner or lessor may not prohibit the lessee or tenant from obtaining a CASp inspection of the subject premises for the occupancy or potential occupancy of the lessee or tenant, if requested by the lessee or tenant. The parties shall mutually agree on the arrangements for the time and manner of the CASp inspection, the payment of the fee for the CASp inspection, and the cost of making any repairs necessary to correct violations of construction-related accessibility standards within the premises." },
+    casp: { title: "CASp disclosure (Cal. Civ. Code \u00A71938)", category: "casp", text: "CASp Disclosure. For purposes of California Civil Code Section 1938, Landlord states that the Premises have not undergone inspection by a Certified Access Specialist (CASp). A Certified Access Specialist (CASp) can inspect the subject premises and determine whether the subject premises comply with all of the applicable construction-related accessibility standards under state law. Although state law does not require a CASp inspection of the subject premises, the commercial property owner or lessor may not prohibit the lessee or tenant from obtaining a CASp inspection of the subject premises for the occupancy or potential occupancy of the lessee or tenant, if requested by the lessee or tenant. The parties shall mutually agree on the arrangements for the time and manner of the CASp inspection, the payment of the fee for the CASp inspection, and the cost of making any repairs necessary to correct violations of construction-related accessibility standards within the premises." },
     security_deposit: { title: "Security deposit", category: "security_deposit", text: "Security Deposit. Upon execution of this Lease, Tenant shall deposit with Landlord $[amount] as security for Tenant's performance. Landlord may apply the Security Deposit to cure any default beyond applicable notice and cure periods, and Tenant shall restore any amount so applied within ten (10) days after written demand. Landlord shall return any unapplied balance within thirty (30) days after the expiration of the Term." },
     holdover: { title: "Holdover", category: "holdover", text: "Holding Over. If Tenant remains in possession after the expiration or termination of the Term without Landlord's written consent, Tenant shall be a tenant at sufferance and shall pay Base Rent equal to one hundred fifty percent (150%) of the Base Rent in effect immediately before the holdover, prorated on a daily basis." },
     estoppel: { title: "Estoppel certificates", category: "estoppel", text: "Estoppel Certificates. Within ten (10) business days after written request, Tenant shall execute and deliver a certificate stating whether this Lease is in full force and effect, the dates through which Rent has been paid, and whether, to Tenant's knowledge, either party is in default." },
@@ -365,6 +365,13 @@
       title: "Assignment consent is in Landlord's sole discretion",
       why: "Landlord can refuse any assignment or sublease for any reason, including a sale of your business. The usual standard is consent not unreasonably withheld, conditioned or delayed.",
       fix: { type: "replace", text: "reasonable discretion (such consent not to be unreasonably withheld, conditioned or delayed)" }
+    },
+    {
+      id: "alterations-sole-discretion", kind: "phrase", docTypes: ["lease"], riskFor: ["tenant"], severity: "medium", category: "alterations", scope: "alterations",
+      re: /\bsole\s+(?:and\s+absolute\s+)?discretion\b|\babsolute\s+discretion\b/i,
+      title: "Alterations need Landlord's consent in its sole discretion",
+      why: "Even minor work such as paint, carpet or cabling could be refused. Ask for reasonable consent and no consent for cosmetic changes.",
+      fix: { type: "replace", text: "reasonable discretion (such consent not to be unreasonably withheld, conditioned or delayed, and no consent shall be required for cosmetic alterations such as painting, carpeting and cabling)" }
     },
     {
       id: "assign-no-permitted-transfer", kind: "section", docTypes: ["lease"], riskFor: ["tenant"], severity: "medium", category: "assignment",
@@ -449,14 +456,14 @@
       id: "holdover-rate", kind: "phrase", docTypes: ["lease"], riskFor: ["tenant"], severity: "medium", category: "holdover", scope: "holdover",
       re: /\b(?:two hundred|three hundred)\s+percent\s*\(\s*[23]00\s*%\s*\)|\b[23]00\s*%|\bdouble the\b|\btwice the\b/i,
       title: "Holdover rent of 200% or more",
-      why: "125–150% of the last month's rent is common, often with a grace period before consequential damages apply.",
+      why: "125\u2013150% of the last month's rent is common, often with a grace period before consequential damages apply.",
       fix: { type: "replace", text: "one hundred twenty-five percent (125%) for the first sixty (60) days and one hundred fifty percent (150%) thereafter" }
     },
     {
       id: "holdover-consequential", kind: "phrase", docTypes: ["lease"], riskFor: ["tenant"], severity: "medium", category: "holdover", scope: "holdover",
       re: /\bconsequential damages\b/i, unless: /\bafter\b[\s\S]{0,40}\b(days|notice)\b/i,
       title: "Holdover exposes you to consequential damages immediately",
-      why: "A short holdover could make Tenant liable for Landlord's lost deal with a new tenant. Limit consequential damages to holdovers lasting more than 30–60 days after notice.",
+      why: "A short holdover could make Tenant liable for Landlord's lost deal with a new tenant. Limit consequential damages to holdovers lasting more than 30\u201360 days after notice.",
       fix: { type: "append", text: "Tenant shall be liable for consequential damages only if the holdover continues for more than thirty (30) days after Landlord gives Tenant written notice that it has signed a lease with a new tenant for the Premises." }
     },
     {
@@ -687,7 +694,7 @@
       id: "psa-release-no-carveouts", kind: "phrase", docTypes: ["psa"], riskFor: ["buyer"], severity: "high", category: "as_is",
       re: /\breleases? seller\b[\s\S]{0,60}?\b(?:any and all|all) claims\b|\bknown (?:or|and) unknown\b|\b1542\b/i, unless: /(?:\bexcept\b[\s\S]{0,80}\b(fraud|representations|breach)\b)|\bshall not apply to\b[\s\S]{0,40}\bfraud\b/i,
       title: "Broad release of Seller with no carve-outs",
-      why: "Buyer gives up claims for known and unknown problems, including a California Civil Code §1542 waiver. Carve out fraud, breach of Seller's reps and covenants, and pre-closing third-party claims.",
+      why: "Buyer gives up claims for known and unknown problems, including a California Civil Code \u00A71542 waiver. Carve out fraud, breach of Seller's reps and covenants, and pre-closing third-party claims.",
       fix: { type: "append", text: "The foregoing release shall not apply to (i) Seller's fraud or intentional misrepresentation, (ii) any breach of Seller's express representations, warranties or covenants in this Agreement or the closing documents, or (iii) third-party claims arising from Seller's ownership or operation of the Property before the Closing." }
     },
     {
@@ -762,7 +769,7 @@
       id: "psa-reps-uncapped", kind: "section", docTypes: ["psa"], riskFor: ["seller"], severity: "high", category: "reps",
       when: /\bsurviv\w*\b/i, docUnless: /\bshall not exceed\b|\baggregate liability\b|\bcap\b/i,
       title: "Seller's post-closing liability is uncapped",
-      why: "Survival without a cap leaves Seller's sale proceeds exposed. A cap of 1–3% of the price and a minimum claim threshold are common.",
+      why: "Survival without a cap leaves Seller's sale proceeds exposed. A cap of 1\u20133% of the price and a minimum claim threshold are common.",
       fix: { type: "append", text: "Seller's aggregate liability for breaches of its representations and warranties shall not exceed [two percent (2%)] of the Purchase Price, and Buyer may not bring any such claim unless its damages exceed $[25,000]." }
     },
     {
@@ -776,7 +783,7 @@
       id: "psa-specific-performance-open", kind: "phrase", docTypes: ["psa"], riskFor: ["seller"], severity: "medium", category: "default",
       re: /\bspecific performance\b/i, unless: /\bwithin\s+[\s\S]{0,30}\bdays\b/i,
       title: "Open-ended specific performance",
-      why: "Require Buyer to file within 60–90 days of the scheduled closing and to have been ready to close.",
+      why: "Require Buyer to file within 60\u201390 days of the scheduled closing and to have been ready to close.",
       fix: { type: "append", text: "Buyer must file any action for specific performance within sixty (60) days after the scheduled Closing Date and must have been ready, willing and able to close." }
     },
 
@@ -804,14 +811,14 @@
       id: "ca-jury-waiver", kind: "phrase", docTypes: ["lease", "psa"], riskFor: ["tenant", "landlord", "buyer", "seller"], severity: "low", category: "jury_waiver", requiresCalifornia: true,
       re: /\bwaive\w*\b[\s\S]{0,30}?\btrial by jury\b|\bjury trial\b/i,
       title: "Jury waiver may be unenforceable in California",
-      why: "California courts generally do not enforce pre-dispute jury waivers (Grafton Partners v. Superior Court, 2005). A judicial reference clause (Code Civ. Proc. §638) is the usual substitute.",
+      why: "California courts generally do not enforce pre-dispute jury waivers (Grafton Partners v. Superior Court, 2005). A judicial reference clause (Code Civ. Proc. \u00A7638) is the usual substitute.",
       fix: null
     },
     {
       id: "ca-civil-code-waivers", kind: "phrase", docTypes: ["lease"], riskFor: ["tenant"], severity: "low", category: "casualty",
       re: /\b(?:1932|1933\s*\(\s*4\s*\)|1941|1942|1950\.7)\b/,
       title: "Tenant waives California statutory rights",
-      why: "Waivers of Civil Code §§1932, 1933(4), 1941, 1942 or 1950.7 are standard in landlord forms. Make sure the lease gives you the contractual rights you're waiving (casualty termination, repairs, deposit accounting).",
+      why: "Waivers of Civil Code \u00A7\u00A71932, 1933(4), 1941, 1942 or 1950.7 are standard in landlord forms. Make sure the lease gives you the contractual rights you're waiving (casualty termination, repairs, deposit accounting).",
       fix: null
     }
   ];
@@ -824,7 +831,7 @@
       { category: "casualty", riskFor: ["tenant", "landlord"], severity: "medium", template: "casualty", why: "Nothing says what happens to rent and the lease if the building burns." },
       { category: "quiet_enjoyment", riskFor: ["tenant"], severity: "low", template: "quiet_enjoyment", why: "An express covenant of quiet enjoyment protects possession against Landlord's interference." },
       { category: "renewal_option", riskFor: ["tenant"], severity: "low", template: "renewal_option", why: "No option to extend: Tenant has no right to stay after the term." },
-      { category: "casp", riskFor: ["tenant", "landlord"], severity: "medium", template: "casp", requiresCalifornia: true, why: "California Civil Code §1938 requires commercial leases to state whether the premises have been CASp-inspected." },
+      { category: "casp", riskFor: ["tenant", "landlord"], severity: "medium", template: "casp", requiresCalifornia: true, why: "California Civil Code \u00A71938 requires commercial leases to state whether the premises have been CASp-inspected." },
       { category: "security_deposit", riskFor: ["landlord"], severity: "medium", template: "security_deposit", why: "No security deposit protects Landlord against default." },
       { category: "holdover", riskFor: ["landlord"], severity: "medium", template: "holdover", why: "Without a holdover clause, Tenant can stay over at the old rent." },
       { category: "estoppel", riskFor: ["landlord"], severity: "medium", template: "estoppel", why: "Landlord's lenders and buyers will need tenant estoppel certificates." },
@@ -933,9 +940,9 @@
       status: "open"
     };
     if (rule.id === "number-mismatch") {
-      finding.title = "Words and numbers don't match: “" + clip(matchText, 60) + "”";
+      finding.title = "Words and numbers don't match: \u201C" + clip(matchText, 60) + "\u201D";
     }
-    finding.comment = "Clause Craft — " + finding.title + ". " + finding.why + (finding.action && finding.action.type === "replace" ? " Suggested: “" + finding.action.replace + "”." : finding.action ? " Suggested addition: “" + finding.action.text + "”" : "");
+    finding.comment = "Clause Craft \u2014 " + finding.title + ". " + finding.why + (finding.action && finding.action.type === "replace" ? " Suggested: \u201C" + finding.action.replace + "\u201D." : finding.action ? " Suggested addition: \u201C" + finding.action.text + "\u201D" : "");
     return finding;
   }
 
@@ -1281,7 +1288,7 @@
       var top = rv.findings.slice(0, 5);
       if (!top.length && !rv.missing.length) return { found: true, intent: "risks", answer: "No issues flagged for the " + rv.perspectiveLabel.toLowerCase() + " side. Clause Craft checks common CRE clauses only; have counsel review.", sources: [], facts: [] };
       var lines = top.map(function (f) { return cap(f.severity) + ": " + f.title + " (" + f.ref + ")"; });
-      if (rv.missing.length) lines.push("Missing: " + rv.missing.slice(0, 4).map(function (m) { return m.label; }).join(", ") + (rv.missing.length > 4 ? "…" : ""));
+      if (rv.missing.length) lines.push("Missing: " + rv.missing.slice(0, 4).map(function (m) { return m.label; }).join(", ") + (rv.missing.length > 4 ? "\u2026" : ""));
       return {
         found: true, intent: "risks",
         answer: "Top issues for the " + rv.perspectiveLabel.toLowerCase() + " side:\n" + lines.join("\n"),
@@ -1294,7 +1301,7 @@
 
     if (intent && intent.special === "parties") {
       var parties = extractParties(doc);
-      if (!parties.length) return { found: false, intent: "parties", answer: "No defined parties found (look for “(\"Landlord\")”-style definitions).", sources: [], facts: [] };
+      if (!parties.length) return { found: false, intent: "parties", answer: "No defined parties found (look for \u201C(\"Landlord\")\u201D-style definitions).", sources: [], facts: [] };
       return {
         found: true, intent: "parties",
         answer: parties.map(function (p) { return p.role + ": " + p.name; }).join("\n"),
@@ -1324,7 +1331,7 @@
     var kinds = intent ? intent.extract || [] : [];
     var factText = keySentences(top1.text, intent, qTokens).map(function (s) { return s.text; }).join(" ");
     var facts = extractFacts(factText || sentence, kinds);
-    var answer = refOf(top1) + ": “" + clip(sentence, 320) + "”";
+    var answer = refOf(top1) + ": \u201C" + clip(sentence, 320) + "\u201D";
     if (facts.length) answer = "Key terms: " + facts.join("; ") + "\n" + answer;
     return {
       found: true,
@@ -1451,14 +1458,14 @@
     var missing = rv.missing.map(function (m) { return m.label; });
     var typeLabel = doc.docType === "lease" ? "Lease" : doc.docType === "psa" ? "Purchase agreement" : "Document";
 
-    var lines = ["CLAUSE CRAFT SUMMARY — " + typeLabel + " (reviewed for the " + rv.perspectiveLabel.toLowerCase() + " side)"];
+    var lines = ["CLAUSE CRAFT SUMMARY \u2014 " + typeLabel + " (reviewed for the " + rv.perspectiveLabel.toLowerCase() + " side)"];
     fields.forEach(function (f) { lines.push(f.label + ": " + f.value); });
     if (risks.length) {
       lines.push("Key risks:");
-      risks.forEach(function (r) { lines.push("• " + cap(r.severity) + " — " + r.title + " (" + r.ref + ")"); });
+      risks.forEach(function (r) { lines.push("\u2022 " + cap(r.severity) + " \u2014 " + r.title + " (" + r.ref + ")"); });
     }
     if (missing.length) lines.push("Missing: " + missing.join(", "));
-    lines.push("Generated by Clause Craft (rule-based). Not legal advice — have counsel review.");
+    lines.push("Generated by Clause Craft (rule-based). Not legal advice \u2014 have counsel review.");
 
     return {
       docType: doc.docType,

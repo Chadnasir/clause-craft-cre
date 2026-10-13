@@ -1,5 +1,5 @@
 /**
- * Clause Craft — demo documents (fictional parties, addresses and terms).
+ * Clause Craft - demo documents (fictional parties, addresses and terms).
  * Used by the browser app ("Load Demo Lease") and the Word add-in ("Insert demo").
  * Both drafts deliberately contain one-sided and missing provisions so the review has something to find.
  */

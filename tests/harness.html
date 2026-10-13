@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Clause Craft - Word simulator (test harness)</title>
+  <style>
+    :root { --ribbon: #F3F2F1; --line: #E1DFDD; --blue: #2B579A; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; font-family: "Segoe UI", system-ui, sans-serif; background: #E9E9E9; }
+    .app { display: grid; grid-template-rows: auto auto 1fr; height: 100vh; }
+    .titlebar { background: var(--blue); color: #fff; padding: 6px 14px; font-size: 12px; display: flex; justify-content: space-between; }
+    .titlebar .tag { background: rgba(255,255,255,0.18); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+    .ribbon { background: var(--ribbon); border-bottom: 1px solid var(--line); padding: 4px 14px 8px; }
+    .ribbon-tabs { display: flex; gap: 18px; font-size: 12px; color: #444; padding: 4px 0 6px; }
+    .ribbon-tabs span.active { color: var(--blue); border-bottom: 2px solid var(--blue); font-weight: 600; }
+    .ribbon-groups { display: flex; gap: 10px; align-items: stretch; }
+    .group { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 6px 12px; font-size: 11px; color: #555; display: flex; align-items: center; gap: 8px; }
+    .group.addin { border-color: #FF6A00; color: #0B2C5F; font-weight: 600; }
+    .group img { width: 32px; height: 32px; }
+    .main { display: grid; grid-template-columns: 1fr 220px 380px; min-height: 0; }
+    .canvas { overflow: auto; padding: 24px 0 60px; }
+    .page { width: 680px; margin: 0 auto; min-height: 880px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.18); padding: 64px 72px; font-family: Georgia, "Times New Roman", serif; font-size: 13.5px; line-height: 1.55; color: #111; }
+    .page p { margin: 0 0 10px; white-space: pre-wrap; }
+    .page p.align-Centered { text-align: center; }
+    .page p.align-Justified { text-align: justify; }
+    .page p.tracked-para { border-left: 2px solid #1D4ED8; padding-left: 6px; }
+    .page p.empty-para::after { content: "\00B6"; color: #bbb; }
+    del.rev { color: #C0392B; text-decoration: line-through; }
+    ins.rev { color: #1D4ED8; text-decoration: underline; }
+    .sel { background: #B4D5FE; }
+    .cmt { background: #FFF3BF; border-bottom: 2px solid #F0B400; }
+    sup.cmt-n { color: #B07D00; font-family: "Segoe UI", sans-serif; font-weight: 700; font-size: 9px; }
+    .margin { overflow: auto; padding: 24px 8px 60px 0; }
+    .balloon { background: #FFFBEA; border: 1px solid #F0D27A; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; font-size: 10.5px; line-height: 1.35; color: #3D3420; }
+    .balloon b { color: #8A6100; }
+    .pane { background: #fff; border-left: 1px solid var(--line); display: grid; grid-template-rows: auto 1fr; min-height: 0; }
+    .pane-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--line); }
+    .pane iframe { width: 100%; height: 100%; border: 0; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar"><span>Document1 - Word</span><span class="tag">Test harness: simulated Word, not Microsoft Word</span></div>
+    <div class="ribbon">
+      <div class="ribbon-tabs"><span>File</span><span class="active">Home</span><span>Insert</span><span>Layout</span><span>References</span><span>Review</span><span>View</span></div>
+      <div class="ribbon-groups">
+        <div class="group">Clipboard</div><div class="group">Font</div><div class="group">Paragraph</div><div class="group">Styles</div>
+        <div class="group addin"><img src="../word/assets/icon-32.png" alt="" /><span>Clause Craft<br/>Review Contract</span></div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="canvas"><div class="page" id="page"></div></div>
+      <div class="margin" id="margin"></div>
+      <div class="pane">
+        <div class="pane-head"><span>Clause Craft</span><span>&#x2715;</span></div>
+        <iframe id="pane" title="Clause Craft task pane"></iframe>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var host = window.MockWordHost = {
+        config: {
+          api: params.get("api") || "1.4",
+          paragraphTextIncludesDeleted: params.get("ptext") !== "current",
+          searchIncludesDeleted: params.get("search") !== "current",
+          host: params.get("host") || "word"
+        },
+        doc: { paragraphs: [{ runs: [], align: "Left", bold: false }], comments: [], selection: null, trackMode: params.get("track") || "Off", settings: {} },
+        log: [],
+        render: render
+      };
+
+      function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+      function render() {
+        var page = document.getElementById("page"), margin = document.getElementById("margin");
+        var html = "", balloons = "";
+        host.doc.paragraphs.forEach(function (p) {
+          var cuts = [0], pos = 0, total = 0;
+          p.runs.forEach(function (r) { total += r.text.length; cuts.push(total); });
+          var cms = host.doc.comments.filter(function (c) { return c.para === p; });
+          cms.forEach(function (c) { cuts.push(c.start, c.end); });
+          var sel = host.doc.selection && host.doc.selection.para === p ? host.doc.selection : null;
+          if (sel) cuts.push(sel.start, sel.end);
+          cuts = cuts.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+          var out = "";
+          for (var i = 0; i < cuts.length - 1; i++) {
+            var a = cuts[i], b = cuts[i + 1];
+            if (b <= a) continue;
+            var start = 0, run = null;
+            for (var k = 0; k < p.runs.length; k++) { var r = p.runs[k]; if (a >= start && a < start + r.text.length) { run = r; break; } start += r.text.length; }
+            if (!run) continue;
+            var t = esc(run.text.slice(a - start, b - start));
+            var st = [];
+            if (run.fmt.strikeThrough) st.push("text-decoration:line-through");
+            if (run.fmt.color) st.push("color:" + run.fmt.color);
+            if (run.fmt.underline && run.fmt.underline !== "None") st.push("text-decoration:underline" + (run.fmt.underline === "Double" ? " double" : ""));
+            if (run.fmt.bold || (p.bold && run.fmt.bold !== false)) st.push("font-weight:700");
+            var seg = st.length ? '<span style="' + st.join(";") + '">' + t + "</span>" : t;
+            if (run.del) seg = '<del class="rev">' + seg + "</del>";
+            if (run.ins) seg = '<ins class="rev">' + seg + "</ins>";
+            if (cms.some(function (c) { return a >= c.start && b <= c.end; })) seg = '<span class="cmt">' + seg + "</span>";
+            if (sel && a >= sel.start && b <= sel.end) seg = '<span class="sel">' + seg + "</span>";
+            out += seg;
+            cms.forEach(function (c) { if (c.end === b) out += '<sup class="cmt-n">[' + (host.doc.comments.indexOf(c) + 1) + "]</sup>"; });
+          }
+          var cls = ["align-" + (p.align || "Left")];
+          if (p.tracked) cls.push("tracked-para");
+          if (!total) cls.push("empty-para");
+          html += '<p class="' + cls.join(" ") + '">' + out + "</p>";
+        });
+        host.doc.comments.forEach(function (c, i) {
+          balloons += '<div class="balloon"><b>[' + (i + 1) + "] Clause Craft</b><br/>" + esc(c.text.replace(/^Clause Craft — /, "")) + "</div>";
+        });
+        page.innerHTML = html;
+        margin.innerHTML = balloons;
+      }
+
+      render();
+      document.getElementById("pane").src = "../word/taskpane.html";
+    })();
+  </script>
+</body>
+</html>
