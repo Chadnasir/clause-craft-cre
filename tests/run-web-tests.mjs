@@ -324,7 +324,7 @@ console.log("W3. Upload: Word documents (.docx)");
 }
 
 /* ------------------------------------------------------------------ */
-console.log("W5. Spellbook-style workflow: setup, selection, playbook, drafting, saved clauses, explain, issues list, Word export");
+console.log("W5. Full workflow: setup, selection, playbook, drafting, saved clauses, explain, issues list, Word export");
 {
   const { context, page } = await open(undefined, { permissions: ["clipboard-read", "clipboard-write"] });
   const P = Demo.lease.paragraphs;

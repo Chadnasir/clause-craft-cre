@@ -250,7 +250,7 @@ console.log("E. Track changes already on / opened outside Word");
 }
 
 /* ------------------------------------------------------------------ */
-console.log("G. Spellbook-style workflow: setup, selection, playbook, drafting, saved clauses, explain, issues list");
+console.log("G. Full workflow: setup, selection, playbook, drafting, saved clauses, explain, issues list");
 {
   const { page, pane } = await open("?api=1.4");
   const frame = () => page.frames().find((f) => f.url().includes("taskpane.html"));
