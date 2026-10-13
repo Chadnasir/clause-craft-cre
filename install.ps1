@@ -16,7 +16,8 @@ try {
 
   Write-Host ''
   Write-Host '  Downloading Clause Craft...'
-  Invoke-WebRequest -Uri 'https://chadnasir.github.io/clause-craft-cre/download/Clause-Craft-for-Windows.zip' -OutFile $zip -UseBasicParsing
+  # The query string only bypasses the web cache, so a just-published update is picked up.
+  Invoke-WebRequest -Uri ('https://chadnasir.github.io/clause-craft-cre/download/Clause-Craft-for-Windows.zip?t=' + [DateTime]::UtcNow.Ticks) -OutFile $zip -UseBasicParsing
   Expand-Archive -Path $zip -DestinationPath $work
 
   # Copy into Documents\Clause Craft. A file that is open in Word (the demo lease) is left as it is.
