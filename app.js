@@ -14,6 +14,7 @@
   var SETUP_KEY = "clauseCraft.webSetup.v1";
   var STANDARDS_KEY = "clauseCraft.standards.v1";
   var CLAUSES_KEY = "clauseCraft.myClauses.v1";
+  var PLAYBOOKS_KEY = "clauseCraft.playbooks.v1";
   var editor = document.getElementById("editor");
 
   var LIBRARY = {
@@ -47,11 +48,24 @@
     library: "lease", pbEditing: false,
     standards: loadStore(STANDARDS_KEY, {}),
     myClauses: loadStore(CLAUSES_KEY, []),
+    playbooks: loadStore(PLAYBOOKS_KEY, []),   // named playbooks: [{ id, name, standards }]
+    customParties: {},                         // role -> name you added, kept with this document
     summary: null, issues: null, lastRange: null
   };
 
   function reviewOpts() { return { perspective: state.perspective, reviewType: state.reviewType, jurisdiction: state.jurisdiction }; }
-  function pbOpts() { return { perspective: state.perspective, jurisdiction: state.jurisdiction, standards: state.standards }; }
+  function pbOpts() { return { perspective: state.perspective, jurisdiction: state.jurisdiction, standards: activeStandards() }; }
+
+  /* Playbooks: "My standards" (state.standards) plus any named playbooks saved in this browser. */
+  function activePlaybook() {
+    var c = state.playbookChoice || "";
+    if (c.indexOf("pb:") !== 0) return null;
+    for (var i = 0; i < state.playbooks.length; i++) if ("pb:" + state.playbooks[i].id === c) return state.playbooks[i];
+    return null;
+  }
+  function activeStandards() { var pb = activePlaybook(); return pb ? pb.standards : state.standards; }
+  function playbookName() { var pb = activePlaybook(); return pb ? pb.name : "My standards"; }
+  function saveActiveStandards() { return activePlaybook() ? saveStore(PLAYBOOKS_KEY, state.playbooks) : saveStore(STANDARDS_KEY, state.standards); }
 
   /* ---------------- helpers ---------------- */
 
@@ -176,7 +190,7 @@
     state.summary = null;
     state.issues = null;
     state.lastRange = null;
-    if (!opts.keepSetup) { state.perspective = "auto"; state.notes = ""; state.setupOpen = true; saveSetup(); syncSetupControls(); }
+    if (!opts.keepSetup) { state.perspective = "auto"; state.notes = ""; state.customParties = {}; state.setupOpen = true; saveSetup(); syncSetupControls(); }
     var dt = docTypeOf(lines);
     if (dt) state.library = dt;
     clear($("summary-output"));
@@ -690,19 +704,20 @@
       if (s.jurisdiction) state.jurisdiction = s.jurisdiction;
       if (s.playbookChoice) state.playbookChoice = s.playbookChoice;
       if (typeof s.notes === "string") state.notes = s.notes;
+      if (s.parties && typeof s.parties === "object") state.customParties = s.parties;
     }
     syncSetupControls();
   }
 
   function saveSetup() {
-    saveStore(SETUP_KEY, { perspective: state.perspective, reviewType: state.reviewType, jurisdiction: state.jurisdiction, playbookChoice: state.playbookChoice, notes: state.notes });
+    saveStore(SETUP_KEY, { perspective: state.perspective, reviewType: state.reviewType, jurisdiction: state.jurisdiction, playbookChoice: state.playbookChoice, notes: state.notes, parties: state.customParties });
   }
 
   function syncSetupControls() {
     $("perspective").value = state.perspective;
     $("review-type").value = state.reviewType;
     $("jurisdiction").value = state.jurisdiction;
-    $("playbook-choice").value = state.playbookChoice;
+    renderPlaybookOptions();
     $("deal-notes").value = state.notes;
   }
 
@@ -720,7 +735,7 @@
       var r = state.result;
       var party = r.perspectiveLabel + (state.perspective === "auto" ? " (auto)" : "");
       var where = state.jurisdiction === "auto" ? (r.california ? "California (detected)" : "Not California") : optionText("jurisdiction", state.jurisdiction);
-      $("setup-summary-text").textContent = [party, optionText("review-type", state.reviewType), where, state.playbookChoice === "none" ? "No playbook" : "My standards"].join(" \u00B7 ");
+      $("setup-summary-text").textContent = [party, optionText("review-type", state.reviewType), where, state.playbookChoice === "none" ? "No playbook" : playbookName()].join(" \u00B7 ");
     }
   }
 
@@ -735,8 +750,35 @@
       if (!base) continue;
       var hit = null;
       for (var k = 0; k < found.length; k++) if (found[k].role === base) hit = found[k];
-      o.text = hit ? base + ": " + hit.name : base;
+      var name = state.customParties[base] || (hit ? hit.name : "");
+      o.text = name ? base + ": " + name : base;
     }
+    return found;
+  }
+
+  /** Re-reads the party names from the document (after edits, or a different document). */
+  function onRefreshParties() {
+    var found = updatePartyLabels().map(function (p) { return p.role + ": " + p.name; });
+    toast(found.length ? "Parties found: " + found.join("; ") : "No party names found in this document. Use Add party to name them.", found.length ? "ok" : "err");
+  }
+
+  function toggleAddParty(open) {
+    $("party-add").hidden = !open;
+    $("btn-party-add").setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) $("party-add-name").focus();
+  }
+
+  /** Names a side yourself (kept with this document), e.g. when the document calls it Lessee or the name isn't found. */
+  function onSaveParty() {
+    var role = $("party-add-role").value;
+    var name = trim(String($("party-add-name").value || "").replace(/\s+/g, " ")).slice(0, 80);
+    if (name) state.customParties[role] = name;
+    else delete state.customParties[role];
+    saveSetup();
+    updatePartyLabels();
+    $("party-add-name").value = "";
+    toggleAddParty(false);
+    toast(name ? "Added " + role + ": " + name : role + " name cleared", "ok");
   }
 
   function onSetupChange(key, value) {
@@ -803,7 +845,7 @@
     var box = $("pb-items"), statsBox = $("pb-stats");
     clear(box); clear(statsBox);
     var side = pbSide();
-    $("pb-side").textContent = state.playbook ? (cap(side.side) + " standards \u00B7 " + (side.docType === "psa" ? "Purchase agreement" : "Lease")) :
+    $("pb-side").textContent = state.playbook ? (playbookName() + " \u00B7 " + cap(side.side) + " side \u00B7 " + (side.docType === "psa" ? "Purchase agreement" : "Lease")) :
       state.result && state.playbookChoice === "none" ? "Playbook is off. Choose \u201CMy standards\u201D in the review setup." : "Run a review to check the document.";
     renderPbEditor();
     if (!state.playbook) { statsBox.hidden = true; return; }
@@ -824,10 +866,10 @@
     box.hidden = !state.pbEditing;
     if (!state.pbEditing) return;
     var side = pbSide();
-    box.appendChild(h("p", { class: "pb-editor-title", text: cap(side.side) + " standards (" + (side.docType === "psa" ? "purchase agreements" : "leases") + ")" }));
+    box.appendChild(h("p", { class: "pb-editor-title", text: playbookName() + ": " + side.side + " standards for " + (side.docType === "psa" ? "purchase agreements" : "leases") }));
     Engine.STANDARDS.forEach(function (std) {
       if (std.side !== side.side || std.docType !== side.docType) return;
-      var ov = state.standards[std.id] || {};
+      var ov = activeStandards()[std.id] || {};
       var on = h("input", { type: "checkbox", "data-std-on": std.id, "aria-label": "Check " + std.label });
       on.checked = !ov.off;
       var row = h("div", { class: "pb-row" }, h("label", { class: "pb-row-label" }, on, h("span", { text: std.label })));
@@ -840,11 +882,15 @@
     });
     box.appendChild(h("div", { class: "btn-row" },
       h("button", { type: "button", class: "btn btn-primary btn-sm", id: "btn-pb-save", onclick: savePbEditor }, "Save standards"),
-      h("button", { type: "button", class: "btn btn-ghost btn-sm", id: "btn-pb-reset", onclick: resetPbEditor }, "Reset to defaults")));
+      h("button", { type: "button", class: "btn btn-ghost btn-sm", id: "btn-pb-reset", onclick: resetPbEditor }, "Reset to defaults"),
+      activePlaybook() ? h("button", { type: "button", class: "btn btn-ghost btn-sm", id: "btn-pb-delete", onclick: deletePlaybook }, "Delete this playbook") : null));
+    box.appendChild(h("div", { class: "pb-saveas" },
+      h("input", { type: "text", id: "pb-new-name", placeholder: "New playbook name", "aria-label": "New playbook name" }),
+      h("button", { type: "button", class: "btn btn-ghost btn-sm", id: "btn-pb-saveas", onclick: saveAsNewPlaybook }, "Save as new playbook")));
   }
 
-  function savePbEditor() {
-    var side = pbSide();
+  /** The editor's values for the side being edited, as overrides of the built-in defaults. */
+  function editorOverrides(side, target) {
     Engine.STANDARDS.forEach(function (std) {
       if (std.side !== side.side || std.docType !== side.docType) return;
       var on = document.querySelector('[data-std-on="' + std.id + '"]');
@@ -852,10 +898,55 @@
       var ov = {};
       if (on && !on.checked) ov.off = true;
       if (inp && inp.value !== "" && !isNaN(Number(inp.value)) && Number(inp.value) !== std.value) ov.value = Number(inp.value);
-      if (ov.off || ov.value != null) state.standards[std.id] = ov;
-      else delete state.standards[std.id];
+      if (ov.off || ov.value != null) target[std.id] = ov;
+      else delete target[std.id];
     });
-    var stored = saveStore(STANDARDS_KEY, state.standards);
+    return target;
+  }
+
+  function afterPlaybookChange() {
+    state.pbEditing = false;
+    saveSetup();
+    renderPlaybookOptions();
+    renderSetup();
+    if (state.result && state.playbookChoice !== "none") refreshPlaybook(); else renderPlaybook();
+  }
+
+  function saveAsNewPlaybook() {
+    var name = trim($("pb-new-name").value).slice(0, 60);
+    if (!name) { toast("Give the new playbook a name first.", "err"); $("pb-new-name").focus(); return; }
+    var copy = editorOverrides(pbSide(), JSON.parse(JSON.stringify(activeStandards())));
+    var pb = { id: String(Date.now()), name: name, standards: copy };
+    state.playbooks.push(pb);
+    var stored = saveStore(PLAYBOOKS_KEY, state.playbooks);
+    state.playbookChoice = "pb:" + pb.id;
+    afterPlaybookChange();
+    toast(stored ? "Saved as \u201C" + name + "\u201D and switched to it" : "Playbook made for this session; this browser blocked saving it", stored ? "ok" : "err");
+  }
+
+  function deletePlaybook() {
+    var pb = activePlaybook();
+    if (!pb) return;
+    state.playbooks = state.playbooks.filter(function (x) { return x.id !== pb.id; });
+    saveStore(PLAYBOOKS_KEY, state.playbooks);
+    state.playbookChoice = "mine";
+    afterPlaybookChange();
+    toast("\u201C" + pb.name + "\u201D deleted. Back to My standards.", "ok");
+  }
+
+  function renderPlaybookOptions() {
+    var sel = $("playbook-choice");
+    if (state.playbookChoice.indexOf("pb:") === 0 && !activePlaybook()) state.playbookChoice = "mine";
+    clear(sel);
+    sel.appendChild(h("option", { value: "mine", text: "My standards" }));
+    state.playbooks.forEach(function (pb) { sel.appendChild(h("option", { value: "pb:" + pb.id, text: pb.name })); });
+    sel.appendChild(h("option", { value: "none", text: "None" }));
+    sel.value = state.playbookChoice;
+  }
+
+  function savePbEditor() {
+    editorOverrides(pbSide(), activeStandards());
+    var stored = saveActiveStandards();
     state.pbEditing = false;
     if (state.result && state.playbookChoice !== "none") refreshPlaybook(); else renderPlaybook();
     toast(stored ? "Standards saved" : "Standards applied, but this browser blocked saving them", stored ? "ok" : "err");
@@ -863,8 +954,9 @@
 
   function resetPbEditor() {
     var side = pbSide();
-    Engine.STANDARDS.forEach(function (std) { if (std.side === side.side && std.docType === side.docType) delete state.standards[std.id]; });
-    saveStore(STANDARDS_KEY, state.standards);
+    var target = activeStandards();
+    Engine.STANDARDS.forEach(function (std) { if (std.side === side.side && std.docType === side.docType) delete target[std.id]; });
+    saveActiveStandards();
     state.pbEditing = false;
     if (state.result && state.playbookChoice !== "none") refreshPlaybook(); else renderPlaybook();
     toast("Standards reset to defaults", "ok");
@@ -1377,6 +1469,11 @@
     $("review-type").addEventListener("change", function (e) { onSetupChange("reviewType", e.target.value); });
     $("jurisdiction").addEventListener("change", function (e) { onSetupChange("jurisdiction", e.target.value); });
     $("playbook-choice").addEventListener("change", function (e) { onSetupChange("playbookChoice", e.target.value); });
+    $("btn-parties-refresh").addEventListener("click", onRefreshParties);
+    $("btn-party-add").addEventListener("click", function () { toggleAddParty($("party-add").hidden); });
+    $("btn-party-save").addEventListener("click", onSaveParty);
+    $("btn-party-cancel").addEventListener("click", function () { toggleAddParty(false); });
+    $("party-add-name").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); onSaveParty(); } });
     var notesTimer = null;
     $("deal-notes").addEventListener("input", function (e) {
       state.notes = e.target.value;

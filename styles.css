@@ -473,3 +473,13 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:foc
   .page .cc-del, .page .cc-ins, .page del, .page ins { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .cc-flash { animation: none; }
 }
+
+/* Party tools and named playbooks */
+.cc-field > label { font-size: 0.7rem; font-weight: 600; color: var(--navy); letter-spacing: 0.02em; }
+.field-links { display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.field-links .linkish, .party-add .linkish { font-size: 0.7rem; }
+.party-add { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; padding: 8px; border: 1px dashed var(--line); border-radius: var(--radius-sm); background: #FAFBFD; }
+.party-add select { width: auto; flex: 0 0 auto; }
+.party-add input { flex: 1 1 140px; min-width: 0; width: auto; }
+.pb-saveas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.pb-saveas input { flex: 1 1 160px; min-width: 0; width: auto; }

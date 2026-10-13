@@ -89,8 +89,8 @@
                     <option value="drafting">Drafting check</option>
                   </select>
                 </label>
-                <label class="cc-field">
-                  <span>Your party</span>
+                <div class="cc-field">
+                  <label for="perspective">Your party</label>
                   <select id="perspective" aria-label="The party you represent">
                     <option value="auto">Auto (from document)</option>
                     <option value="tenant">Tenant</option>
@@ -99,7 +99,22 @@
                     <option value="seller">Seller</option>
                     <option value="neutral">Both sides (neutral)</option>
                   </select>
-                </label>
+                  <span class="field-links">
+                    <button type="button" class="linkish" id="btn-parties-refresh">Refresh parties</button>
+                    <button type="button" class="linkish" id="btn-party-add" aria-expanded="false" aria-controls="party-add">Add party</button>
+                  </span>
+                </div>
+                <div class="party-add" id="party-add" hidden>
+                  <select id="party-add-role" aria-label="Which side">
+                    <option value="Tenant">Tenant</option>
+                    <option value="Landlord">Landlord</option>
+                    <option value="Buyer">Buyer</option>
+                    <option value="Seller">Seller</option>
+                  </select>
+                  <input type="text" id="party-add-name" placeholder="Party name" aria-label="Party name" />
+                  <button type="button" class="btn btn-primary btn-sm" id="btn-party-save">Add</button>
+                  <button type="button" class="linkish" id="btn-party-cancel">Cancel</button>
+                </div>
                 <label class="cc-field">
                   <span>Jurisdiction</span>
                   <select id="jurisdiction">

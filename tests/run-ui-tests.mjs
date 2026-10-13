@@ -369,6 +369,48 @@ console.log("G. Full workflow: setup, selection, playbook, drafting, saved claus
   await page.waitForTimeout(300);
   await pane.locator("#tab-playbook").click();
   check(/Playbook is off/.test(await pane.locator("#pb-side").textContent()) && await pane.locator("#pb-items .card").count() === 0, "playbook can be switched off in the setup");
+
+  // Named playbooks: save the editor as a new playbook, switch between playbooks, delete it
+  await pane.locator("#btn-pb-edit").click();
+  await pane.locator('[data-std="tn-late-charge"]').fill("6");
+  await pane.locator("#pb-new-name").fill("Credit tenant deals");
+  await pane.locator("#btn-pb-saveas").click();
+  await pane.locator("#pb-side", { hasText: "Credit tenant deals" }).waitFor({ timeout: 5000 });
+  let pbStore = await frame().evaluate(() => JSON.parse(localStorage.getItem("clauseCraft.playbooks.v1") || "[]"));
+  check(pbStore.length === 1 && pbStore[0].name === "Credit tenant deals" && pbStore[0].standards["tn-late-charge"].value === 6, "Save as new playbook keeps your numbers under that name");
+  check(await pane.locator("#playbook-choice").inputValue() === "pb:" + pbStore[0].id && (await pane.locator("#playbook-choice option").allTextContents()).join("|") === "My standards|Credit tenant deals|None", "the new playbook is offered in the setup and selected");
+  check(/6%/.test(await pane.locator("#pb-items .card", { has: pane.locator("h4", { hasText: "Late charge" }) }).textContent()), "the checks use that playbook's numbers");
+  await pane.locator("#tab-review").click();
+  await pane.locator("#playbook-choice").selectOption("mine");
+  await page.waitForTimeout(300);
+  await pane.locator("#tab-playbook").click();
+  check(/^My standards/.test(await pane.locator("#pb-side").textContent()), "switch back to My standards from the setup");
+  await pane.locator("#tab-review").click();
+  await pane.locator("#playbook-choice").selectOption("pb:" + pbStore[0].id);
+  await page.waitForTimeout(300);
+  await pane.locator("#tab-playbook").click();
+  await pane.locator("#btn-pb-edit").click();
+  await pane.locator("#btn-pb-delete").click();
+  await page.waitForTimeout(300);
+  pbStore = await frame().evaluate(() => JSON.parse(localStorage.getItem("clauseCraft.playbooks.v1") || "[]"));
+  check(pbStore.length === 0 && (await pane.locator("#playbook-choice option").allTextContents()).join("|") === "My standards|None" && /^My standards/.test(await pane.locator("#pb-side").textContent()), "delete a playbook and fall back to My standards");
+
+  // Parties: refresh from the document, add a name yourself, clear it
+  await pane.locator("#tab-review").click();
+  await pane.locator("#btn-parties-refresh").click();
+  check(/Parties found: .*Landlord: PACIFIC MERIDIAN OWNER, LLC.*|Parties found: .*Tenant: HARBORLINE ADVISORY GROUP, INC\./.test((await toastText(pane)).text), "Refresh parties reads the names from the document");
+  await pane.locator("#btn-party-add").click();
+  await pane.locator("#party-add-role").selectOption("Landlord");
+  await pane.locator("#party-add-name").fill("Pacific Meridian (owner)");
+  await pane.locator("#btn-party-save").click();
+  check(await pane.locator("#perspective option[value=landlord]").textContent() === "Landlord: Pacific Meridian (owner)" && await pane.locator("#party-add").isHidden(), "Add party names a side yourself");
+  const savedSetup = await frame().evaluate(() => Office.context.document.settings.get("clauseCraft.setup"));
+  check(savedSetup && savedSetup.parties && savedSetup.parties.Landlord === "Pacific Meridian (owner)", "the added name is kept with the document");
+  await pane.locator("#btn-party-add").click();
+  await pane.locator("#party-add-role").selectOption("Landlord");
+  await pane.locator("#btn-party-save").click();
+  check(await pane.locator("#perspective option[value=landlord]").textContent() === "Landlord: PACIFIC MERIDIAN OWNER, LLC", "clearing the name goes back to the one in the document");
+
   await pane.locator("#tab-review").click();
   await pane.locator("#btn-run").click();
   await page.waitForTimeout(300);

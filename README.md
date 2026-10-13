@@ -15,11 +15,11 @@ Everything runs on your computer. No AI service, no API keys, no account, and th
 
 ## What it does
 
-- **Review setup**: review type (comprehensive, quick = high risks only, drafting check), your party (with the party names read from the document), jurisdiction (detect, California, another state), playbook on or off, and deal notes that stay with the document.
+- **Review setup**: review type (comprehensive, quick = high risks only, drafting check), your party (with the party names read from the document; **Refresh parties** re-reads them and **Add party** lets you name a side yourself), jurisdiction (detect, California, another state), which playbook to use (or none), and deal notes that stay with the document.
 - **Review**: flags one-sided terms for the side you represent (tenant, landlord, buyer, seller, or both sides), with the reason, the exact words and suggested language. Filter by High / Medium / Low / Missing, or **Review selection** to see only what's in the paragraphs you selected.
 - **Document checks**: term dates add up, rent matches rate x square feet, party names match the signature blocks, defined terms are used and capitalized terms are defined, section cross-references and exhibits exist, written numbers match the figures.
 - **Redline**: one click applies the fix. In Word it is a real tracked change, or a Word comment if you'd rather flag it; **Redline all** / **Comment all**. In the browser it shows as red strike-through and blue double underline; **Accept all**; **Download .docx** opens in Word with every change as a tracked change.
-- **Playbook**: your own standards (escalation cap, late charge, holdover, cure periods, estoppel turnaround, deposit, opex cap, due diligence and closing periods, rep survival, deposit size and more), checked against the document and redlined to your number. Edit them once; they are saved on that computer.
+- **Playbook**: your own standards (escalation cap, late charge, holdover, cure periods, estoppel turnaround, deposit, opex cap, due diligence and closing periods, rep survival, deposit size and more), checked against the document and redlined to your number. Edit them once; they are saved on that computer. **Save as new playbook** keeps a separate set (say, for credit-tenant deals) that you can pick in the setup.
 - **Missing clauses**: CASp disclosure (Cal. Civ. Code 1938), waiver of subrogation, quiet enjoyment, renewal option, 1031 cooperation, seller operating covenants and more, with starting-point language to insert at the cursor or at the end.
 - **Draft**: option to extend, early termination, free rent, TI allowance, opex cap, guaranty cap, exclusive use, ROFO, due diligence, DD extension, closing and rep survival, written in contract style ("sixty (60) days") from the numbers you type. Clause library, plus **My clauses** to save language you like from any document.
 - **Ask / Explain**: plain-English questions ("Who can terminate?", "Is the deposit refundable?") answered from the document's own words with the section cited; **Explain selected text** describes any clause and lists what's flagged in it.
@@ -85,8 +85,8 @@ node tools/package.mjs          # new Windows download in dist/
 ```
 npm install
 npm test           # engine: 25 tests
-npm run test:ui    # Word add-in against the Office.js simulator: 75 checks
-npm run test:web   # browser version: 111 checks (incl. file:// and the .docx download)
+npm run test:ui    # Word add-in against the Office.js simulator: 84 checks
+npm run test:web   # browser version: 120 checks (incl. file:// and the .docx download)
 ```
 
 The UI and browser tests drive Chromium. Point `CHROMIUM_PATH` at Chrome or Edge (for example `C:\Program Files\Google\Chrome\Application\chrome.exe`), or run `npx playwright-core install chromium` once. The .docx check also opens the download with python-docx and LibreOffice when they are installed.

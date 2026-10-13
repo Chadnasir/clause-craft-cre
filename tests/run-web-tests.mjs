@@ -440,6 +440,41 @@ console.log("W5. Full workflow: setup, selection, playbook, drafting, saved clau
   await page.locator("#playbook-choice").selectOption("none");
   await page.locator(".sidebar-tabs .tab[data-tab=playbook]").click();
   check(/Playbook is off/.test(await page.locator("#pb-side").textContent()) && await page.locator("#pb-items .cc-card").count() === 0, "playbook can be switched off in the setup");
+  // Named playbooks
+  await page.locator("#btn-pb-edit").click();
+  await page.locator('[data-std="tn-late-charge"]').fill("6");
+  await page.locator("#pb-new-name").fill("Credit tenant deals");
+  await page.locator("#btn-pb-saveas").click();
+  let pbStore = await page.evaluate(() => JSON.parse(localStorage.getItem("clauseCraft.playbooks.v1") || "[]"));
+  check(pbStore.length === 1 && pbStore[0].name === "Credit tenant deals" && pbStore[0].standards["tn-late-charge"].value === 6, "Save as new playbook keeps your numbers under that name");
+  check(await page.locator("#playbook-choice").inputValue() === "pb:" + pbStore[0].id && (await page.locator("#playbook-choice option").allTextContents()).join("|") === "My standards|Credit tenant deals|None" && /^Credit tenant deals/.test(await page.locator("#pb-side").textContent()), "the new playbook is offered in the setup and selected");
+  check(/6%/.test(await page.locator("#pb-items [data-standard=tn-late-charge]").textContent()), "the checks use that playbook's numbers");
+  await page.locator(".sidebar-tabs .tab[data-tab=review]").click();
+  await page.locator("#playbook-choice").selectOption("mine");
+  await page.locator(".sidebar-tabs .tab[data-tab=playbook]").click();
+  check(/^My standards/.test(await page.locator("#pb-side").textContent()), "switch back to My standards from the setup");
+  await page.locator(".sidebar-tabs .tab[data-tab=review]").click();
+  await page.locator("#playbook-choice").selectOption("pb:" + pbStore[0].id);
+  await page.locator(".sidebar-tabs .tab[data-tab=playbook]").click();
+  await page.locator("#btn-pb-edit").click();
+  await page.locator("#btn-pb-delete").click();
+  pbStore = await page.evaluate(() => JSON.parse(localStorage.getItem("clauseCraft.playbooks.v1") || "[]"));
+  check(pbStore.length === 0 && (await page.locator("#playbook-choice option").allTextContents()).join("|") === "My standards|None" && /^My standards/.test(await page.locator("#pb-side").textContent()), "delete a playbook and fall back to My standards");
+
+  // Parties: refresh from the document, add a name yourself, clear it
+  await page.locator(".sidebar-tabs .tab[data-tab=review]").click();
+  check(/Parties found: .*HARBORLINE ADVISORY GROUP, INC\./.test((await toastAfter(page, () => page.locator("#btn-parties-refresh").click())).text), "Refresh parties reads the names from the document");
+  await page.locator("#btn-party-add").click();
+  await page.locator("#party-add-role").selectOption("Landlord");
+  await page.locator("#party-add-name").fill("Pacific Meridian (owner)");
+  await page.locator("#btn-party-save").click();
+  check(await page.locator("#perspective option[value=landlord]").textContent() === "Landlord: Pacific Meridian (owner)" && await page.locator("#party-add").isHidden(), "Add party names a side yourself");
+  check((await page.evaluate(() => JSON.parse(localStorage.getItem("clauseCraft.webSetup.v1")).parties.Landlord)) === "Pacific Meridian (owner)", "the added name is kept with the document");
+  await page.locator("#btn-party-add").click();
+  await page.locator("#party-add-role").selectOption("Landlord");
+  await page.locator("#btn-party-save").click();
+  check(await page.locator("#perspective option[value=landlord]").textContent() === "Landlord: PACIFIC MERIDIAN OWNER, LLC", "clearing the name goes back to the one in the document");
+
   await page.locator(".sidebar-tabs .tab[data-tab=review]").click();
   await page.locator("#jurisdiction").selectOption("auto");
   await page.locator("#playbook-choice").selectOption("mine");
