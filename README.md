@@ -1,94 +1,99 @@
 # Clause Craft
 
-Spellbook-style contract review that sits beside your document, built for CRE leases and PSAs.
+Contract review that sits beside your document, built for CRE leases and PSAs.
 
 Two ways to use it, same review engine (`engine/clause-engine.js`):
 
 1. **Inside Microsoft Word** (`word/`): a **Review Contract** button on the Home tab opens the Clause Craft pane next to your lease or PSA.
-2. **In the browser** (`index.html`): a Word-style page with the same review panel. Nothing to install.
+2. **In the browser** (`index.html`): a Word-style page with the same panel. Nothing to install, and it works offline when opened straight from the folder.
 
 Everything runs on your computer. No AI service, no API keys, no account, and the contract text is never uploaded.
 
-- Live (browser): https://raw.githack.com/Chadnasir/clause-craft-cre/main/index.html
+- Browser version: https://chadnasir.github.io/clause-craft-cre/
+- Windows download (browser version + Word installer): build with `node tools/package.mjs`, or use the zip you were sent
 - Repo: https://github.com/Chadnasir/clause-craft-cre
 
 ## What it does
 
-- **Review**: flags one-sided terms for the side you represent (tenant, landlord, buyer, seller, or both sides), with the reason, the exact words, and suggested language. Severity filters: High / Medium / Low / Missing.
-- **Redline**: one click applies the fix. In Word it is a real tracked change, or a Word comment if you'd rather flag it. In the browser it shows as red strike-through and blue double underline. "Redline all" and "Comment all" in Word.
-- **Missing clauses**: CASp disclosure (Cal. Civ. Code §1938), waiver of subrogation, quiet enjoyment, renewal option, 1031 cooperation, seller operating covenants and more, with starting-point language to insert.
-- **Clauses**: what the document contains, section by section. Click to jump. Word also has a clause library to insert at the cursor.
-- **Ask**: plain-English questions ("Who can terminate?", "What's the NNN?", "Is the deposit refundable?") answered from the document's own words, with the section cited.
-- **Summary**: parties, premises or property, term, rent or price, deposit, key risks and missing items. Insert into the document or copy.
+- **Review setup**: review type (comprehensive, quick = high risks only, drafting check), your party (with the party names read from the document), jurisdiction (detect, California, another state), playbook on or off, and deal notes that stay with the document.
+- **Review**: flags one-sided terms for the side you represent (tenant, landlord, buyer, seller, or both sides), with the reason, the exact words and suggested language. Filter by High / Medium / Low / Missing, or **Review selection** to see only what's in the paragraphs you selected.
+- **Document checks**: term dates add up, rent matches rate x square feet, party names match the signature blocks, defined terms are used and capitalized terms are defined, section cross-references and exhibits exist, written numbers match the figures.
+- **Redline**: one click applies the fix. In Word it is a real tracked change, or a Word comment if you'd rather flag it; **Redline all** / **Comment all**. In the browser it shows as red strike-through and blue double underline; **Accept all**; **Download .docx** opens in Word with every change as a tracked change.
+- **Playbook**: your own standards (escalation cap, late charge, holdover, cure periods, estoppel turnaround, deposit, opex cap, due diligence and closing periods, rep survival, deposit size and more), checked against the document and redlined to your number. Edit them once; they are saved on that computer.
+- **Missing clauses**: CASp disclosure (Cal. Civ. Code 1938), waiver of subrogation, quiet enjoyment, renewal option, 1031 cooperation, seller operating covenants and more, with starting-point language to insert at the cursor or at the end.
+- **Draft**: option to extend, early termination, free rent, TI allowance, opex cap, guaranty cap, exclusive use, ROFO, due diligence, DD extension, closing and rep survival, written in contract style ("sixty (60) days") from the numbers you type. Clause library, plus **My clauses** to save language you like from any document.
+- **Ask / Explain**: plain-English questions ("Who can terminate?", "Is the deposit refundable?") answered from the document's own words with the section cited; **Explain selected text** describes any clause and lists what's flagged in it.
+- **Summary and issues list**: parties, premises or property, term, rent or price, deposit, key risks and missing items; and a numbered issues list for the other side, with your deal notes at the top. Insert either into the document or copy it. Clause Craft ignores its own summaries and issues lists when it reviews the document again.
 
-Covers office and retail leases and purchase and sale agreements / escrow instructions, with California checks (CASp, pre-dispute jury waivers, Civil Code waivers, §1542 releases). Demo lease (Irvine office) and demo PSA (Perris net-lease retail) are included.
+Covers office and retail leases and purchase and sale agreements / escrow instructions, with California checks (CASp, pre-dispute jury waivers, Civil Code waivers, 1542 releases). Demo lease (Irvine office) and demo PSA (Perris net-lease retail) are included.
 
 ## Install the Word add-in
 
-The add-in loads its pages from this GitHub repo through raw.githack.com, so the `word/` and `engine/` folders need to be on the `main` branch first.
+The add-in's pages are served by GitHub Pages from the `gh-pages` branch (https://chadnasir.github.io/clause-craft-cre/word/taskpane.html). Word needs an internet connection to open the pane; the review itself runs inside Word.
 
-**Word on the web (quickest)**
-1. Open a document in Word at office.com.
-2. Home > Add-ins > More Settings > **Upload My Add-in**.
-3. Browse to `word/manifest.xml` and choose **Upload**.
-4. Home tab > **Review Contract**.
+**Word for Windows (desktop)**: double-click `Install in Word.cmd` (in the Windows download, or in `windows/` here). It registers the add-in for your Windows user, the same way Microsoft's own `office-addin-dev-settings` tool does (`HKCU\Software\Microsoft\Office\16.0\WEF\Developer`). No admin rights needed. Close every Word window, reopen Word, then Home > **Review Contract**. `Uninstall from Word.cmd` removes it.
 
-**Word for Windows (desktop)**
-1. Make a folder, for example `C:\ClauseCraft`, and copy `word/manifest.xml` into it.
-2. Right-click the folder > Properties > Sharing > **Share** > Share. Note the network path it shows (like `\\YOUR-PC\ClauseCraft`).
-3. In Word: File > Options > Trust Center > Trust Center Settings > **Trusted Add-in Catalogs**. Paste the network path into Catalog Url, choose **Add catalog**, tick **Show in Menu**, then OK and OK. Close and reopen Word.
-4. Home > Add-ins > **Advanced** > **SHARED FOLDER** > Clause Craft > **Add**.
-5. Home tab > **Review Contract**.
+**Word on the web**: open a document, then Home > Add-ins > More Settings > **Upload My Add-in** > Browse to `Clause Craft manifest.xml` (or `word/manifest.xml`) > **Upload**. Word on the web keeps it until that browser's cache is cleared.
 
-Word versions: tracked changes and comments need a current Word (Microsoft 365, Word 2024, or Word on the web). Older versions such as Word 2019 still work, but redlines are applied as formatting (red strike-through, blue double underline) and comments are turned off. The pane tells you which mode it is in.
+**If IT blocks the installer**: put `word/manifest.xml` in a shared folder, add the folder's network path under File > Options > Trust Center > Trust Center Settings > **Trusted Add-in Catalogs** (tick Show in Menu), restart Word, then Home > Add-ins > Advanced > **SHARED FOLDER**.
 
-To check the manifest with Microsoft's validator (needs internet): `npx office-addin-manifest validate word/manifest.xml`
+Word versions: tracked changes and comments need Microsoft 365, Word 2024 or Word on the web. Older versions such as Word 2019 still work, but redlines are applied as formatting (red strike-through, blue double underline) and comments are turned off. The pane tells you which mode it is in.
 
 ## Use it in the browser
 
-Open `index.html` in Chrome or Edge (double-clicking the file works) or use the live link above.
+Open `index.html` (or `Clause Craft.html` in the Windows download) in Chrome or Edge; double-clicking the file works. Or use the link above.
 
-- **Load Demo Lease**, or **Upload** a .docx, .txt or .md contract (or drag the file onto the page). Tracked deletions in a .docx are left out; insertions are kept.
-- **Run Review**, then **Accept** or **Reject** each item. Change "Reviewing for" to switch sides.
-- **Export HTML** saves a redlined copy. **Print** prints only the document, redlines in color.
-- Your working copy is saved in that browser only, and survives a page reload.
+- **Load Demo Lease**, a demo PSA, or **Upload** a .docx, .txt or .md contract (or drag the file onto the page). Tracked deletions in a .docx are left out; insertions are kept.
+- **Start review**, then **Accept** or **Reject** each item. **Change** reopens the setup.
+- **Download .docx** saves a Word file with your redlines as tracked changes (track changes stays on for edits you make in Word). **Export HTML** and **Print** are there too.
+- Your working copy, setup, standards and saved clauses stay in that browser only, and survive closing the page.
 
 ## Privacy
 
-Contract text stays on the computer. The only files loaded from the internet are Microsoft's Office.js (every Word add-in needs it) and the Google Fonts typefaces. The browser tests confirm no other network requests during a full review session.
+Contract text stays on the computer. The only files loaded from the internet are Microsoft's Office.js (every Word add-in needs it), the Clause Craft pages themselves from GitHub Pages, and the Google Fonts typefaces. The browser tests confirm no other network requests during a full session.
 
 ## Limits
 
 - Rule-based checks written for California CRE forms, not AI. It catches the landlord- and seller-favorable language it was built for and will miss issues worded differently. Treat it as a first pass, not a substitute for counsel.
-- Tested against an Office.js simulator and in Chromium (119 automated checks). Not yet run inside a real copy of Word: try it on the demo lease first.
-- The Word add-in needs an internet connection to load.
-- .docx import in the browser reads the text only: no formatting, headers, footers or footnotes.
+- No free-form chat or "edit the document for me", no market benchmarks, no web research and no multi-document matters: those need an AI service, which this deliberately doesn't use.
+- Tested against an Office.js simulator, in Chromium (including opened straight from the folder) and the Windows installer under Wine. Not yet run inside a real copy of Word: try it on the demo lease first.
+- .docx import in the browser reads the text only: no formatting, headers, footers or footnotes. The .docx download is plain formatting (Times New Roman, bold captions) with your redlines as tracked changes.
 
 ## Files
 
 | Path | What it is |
 |---|---|
-| `engine/clause-engine.js` | Review rules, missing-clause checks, Ask, Summary |
+| `engine/clause-engine.js` | Review rules, checks, playbook, drafting, Ask, Explain, Summary, issues list |
 | `engine/demo-docs.js` | Demo office lease and PSA |
-| `word/manifest.xml` | Word add-in manifest (what you upload or put in the shared folder) |
+| `word/manifest.xml` | Word add-in manifest (points at GitHub Pages) |
 | `word/taskpane.*`, `word/commands.html`, `word/assets/` | Word task pane and ribbon icons |
 | `index.html`, `app.js`, `styles.css` | Browser version |
+| `windows/` | `Install in Word.cmd`, `Uninstall from Word.cmd`, `START HERE.html` for the Windows download |
+| `tools/package.mjs` | Builds `dist/Clause-Craft-for-Windows.zip` |
 | `tests/` | Engine tests, Word add-in tests (Office.js simulator), browser tests, .docx fixtures |
+
+## Publish an update
+
+```
+git push origin main            # the code
+git push origin main:gh-pages   # what Word and the browser link load
+node tools/package.mjs          # new Windows download in dist/
+```
 
 ## Run the tests
 
 ```
 npm install
-npm test           # engine: 15 tests
-npm run test:ui    # Word add-in against the Office.js simulator: 45 checks
-npm run test:web   # browser version: 59 checks
+npm test           # engine: 25 tests
+npm run test:ui    # Word add-in against the Office.js simulator: 75 checks
+npm run test:web   # browser version: 111 checks (incl. file:// and the .docx download)
 ```
 
-The UI and browser tests drive Chromium. Point `CHROMIUM_PATH` at Chrome or Edge (for example `C:\Program Files\Google\Chrome\Application\chrome.exe`), or run `npx playwright-core install chromium` once.
+The UI and browser tests drive Chromium. Point `CHROMIUM_PATH` at Chrome or Edge (for example `C:\Program Files\Google\Chrome\Application\chrome.exe`), or run `npx playwright-core install chromium` once. The .docx check also opens the download with python-docx and LibreOffice when they are installed.
 
 ## vs Spellbook
 
-Spellbook is a Microsoft Word add-in with cloud AI, Playbooks, market benchmarks, and Associate for multi-doc matters (custom per-seat pricing, 7-day trial). Clause Craft is narrower: CRE-tuned rules, a Word add-in plus a browser version, runs offline, free to use. Not a law-firm platform and **not legal advice**.
+Spellbook is a Microsoft Word add-in built on cloud AI: chat and edit, Playbooks, market benchmarks and Associate for multi-document matters (custom per-seat pricing). Clause Craft covers the review, playbook, drafting, issues-list and setup workflow with CRE-tuned rules instead, runs offline, and is free to use. Not a law-firm platform and **not legal advice**.
 
 ## vs typical Grok Build
 
