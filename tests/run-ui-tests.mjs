@@ -122,12 +122,14 @@ console.log("A. Microsoft 365 (WordApi 1.4): demo lease, tenant side");
   const t = await toastText(pane);
   await page.waitForTimeout(300);
   check(/redlines added/.test((await pane.locator("#toast").textContent()) || t.text), "Redline all completed");
+  await pane.locator("#btn-setup-edit").click();
   await pane.locator("#btn-run").click();
   await page.waitForTimeout(300);
   const leftover = await pane.locator("#findings .card button", { hasText: /Apply redline|Add language/ }).count();
   check(leftover === 0, "after Redline all + re-run, no fixable issue remains (" + leftover + ")");
   const manual = await pane.locator("#findings .card h4").allTextContents();
-  check(manual.length > 0 && manual.length <= 10, "only manual-review items remain: " + manual.length);
+  const expectManual = Engine.review((await docState(page)).current, { perspective: "tenant" }).findings.filter((f) => !f.action).length;
+  check(manual.length > 0 && manual.length === expectManual, "only manual-review items remain: " + manual.length);
   s = await docState(page);
   check(s.current[2] === Demo.lease.paragraphs[2], "untouched paragraphs unchanged");
   check(/space of comparable size, quality/.test(s.current[19]), "an issue that was commented on is still redlined by Redline all");
@@ -140,7 +142,7 @@ console.log("A. Microsoft 365 (WordApi 1.4): demo lease, tenant side");
   check(s.current[s.count - 1].startsWith("CASp Disclosure.") && s.tracked[s.count - 1], "CASp clause inserted as a tracked paragraph");
   check(await pane.locator("#missing .card h4", { hasText: "CASp" }).count() === 0, "CASp no longer listed as missing");
 
-  await pane.locator("#tab-clauses").click();
+  await pane.locator("#tab-summary").click();
   check(await pane.locator("#clause-list li").count() > 20, "clause inventory listed");
   await pane.locator("#clause-list .clause-item", { hasText: "Assignment & subletting" }).click();
   s = await docState(page);
@@ -207,6 +209,7 @@ console.log("C. Purchase agreement, buyer then seller");
   await clickAndWait(pane, "Deposit goes hard immediately", "Add language", "Redlined");
   let s = await docState(page);
   check(s.runs[5].some((r) => r.ins && r.text.includes("fully refundable")), "deposit protection appended as tracked insertion");
+  await pane.locator("#btn-setup-edit").click();
   await pane.locator("#perspective").selectOption("seller");
   await page.waitForTimeout(300);
   const sellerExpected = Engine.review(s.current, { perspective: "seller" }).findings.length;
@@ -247,6 +250,135 @@ console.log("E. Track changes already on / opened outside Word");
 }
 
 /* ------------------------------------------------------------------ */
+console.log("G. Spellbook-style workflow: setup, selection, playbook, drafting, saved clauses, explain, issues list");
+{
+  const { page, pane } = await open("?api=1.4");
+  const frame = () => page.frames().find((f) => f.url().includes("taskpane.html"));
+  const select = (index, start = 0, end = null) => page.evaluate(([i, a, b]) => {
+    const d = window.MockWordHost.doc, p = d.paragraphs[i];
+    const len = p.runs.map((r) => r.text).join("").length;
+    d.selection = { para: p, start: a, end: b == null ? len : b };
+  }, [index, start, end]);
+
+  check(await pane.locator("#qs-review").isVisible() && await pane.locator("#qs-draft").isVisible() && await pane.locator("#qs-playbook").isVisible(), "getting-started shortcuts shown before the first review");
+  await pane.locator("[data-demo=lease]").click();
+  await pane.locator("#review-body").waitFor();
+  check(await pane.locator("#setup-fields").isHidden() && /Tenant/.test(await pane.locator("#setup-summary-text").textContent()), "setup folds into a one-line summary after the review");
+  check(/HARBORLINE ADVISORY GROUP, INC\./.test(await pane.locator("#perspective option[value=tenant]").textContent()), "party list shows the tenant's name from the document");
+  const checks = await pane.locator("#checks li").allTextContents();
+  check(checks.some((t) => /Term dates add up/.test(t)) && checks.some((t) => /Rent matches rate/.test(t)) && checks.some((t) => /Rent, Additional Rent have no definition/.test(t)), "document checks listed (dates, rent math, undefined terms)");
+
+  // Review selection
+  await select(12, 0, 30);
+  await pane.locator("#btn-review-selection").click();
+  await pane.locator("#scope-text").waitFor();
+  const inPara12 = Engine.review(Demo.lease.paragraphs, { perspective: "tenant" }).findings.filter((f) => f.paragraphIndex === 12).length;
+  check(await pane.locator("#findings .card").count() === inPara12, `Review selection shows only the ${inPara12} issues in the selected paragraph`);
+  await pane.locator("#btn-scope-clear").click();
+  check(await pane.locator("#findings .card").count() > inPara12, "Show all brings every issue back");
+
+  // Playbook
+  await pane.locator("#tab-playbook").click();
+  const pb = Engine.playbook(Demo.lease.paragraphs, { perspective: "tenant" });
+  check(await pane.locator("#pb-items .card").count() === pb.items.length, `playbook lists ${pb.items.length} standards`);
+  check(await pane.locator("#count-playbook").textContent() === String(pb.stats.fail), "Playbook tab shows how many items are off standard");
+  const lateCard = pane.locator("#pb-items .card", { has: pane.locator("h4", { hasText: "Late charge" }) });
+  await lateCard.locator("button", { hasText: "Apply redline" }).click();
+  await pane.locator("#pb-items .card.pb-pass", { has: pane.locator("h4", { hasText: "Late charge" }) }).waitFor({ timeout: 5000 });
+  let s = await docState(page);
+  check(s.runs[22].some((r) => r.del && r.text === "ten percent (10%)") && s.runs[22].some((r) => r.ins && r.text === "five percent (5%)"), "playbook redline: late charge 10% to your 5%, as a tracked change");
+  await pane.locator("#btn-pb-edit").click();
+  await pane.locator('[data-std="tn-late-charge"]').fill("4");
+  await pane.locator("#btn-pb-save").click();
+  const late4 = pane.locator("#pb-items .card.pb-fail", { has: pane.locator("h4", { hasText: "Late charge" }) });
+  await late4.waitFor({ timeout: 5000 });
+  check(/four percent \(4%\)/.test(await late4.textContent()), "your own number (4%) drives the check and the suggested redline");
+  const stored = await frame().evaluate(() => JSON.parse(localStorage.getItem("clauseCraft.standards.v1") || "{}"));
+  check(stored["tn-late-charge"] && stored["tn-late-charge"].value === 4, "standards are saved on this computer");
+  await pane.locator("#btn-pb-edit").click();
+  await pane.locator("#btn-pb-reset").click();
+  await pane.locator("#pb-items .card.pb-pass", { has: pane.locator("h4", { hasText: "Late charge" }) }).waitFor({ timeout: 5000 });
+  check(true, "reset to defaults");
+  const renew = pane.locator("#pb-items .card", { has: pane.locator("h4", { hasText: "Option to extend" }) });
+  await renew.locator("button", { hasText: "Insert clause" }).click();
+  await page.waitForTimeout(300);
+  s = await docState(page);
+  check(s.current[s.count - 1].startsWith("Option to Extend.") && s.tracked[s.count - 1], "missing standard clause inserted as a tracked paragraph");
+
+  // Draft with your numbers
+  await pane.locator("#tab-draft").click();
+  const draft = pane.locator('[data-draft="renewal_option"]');
+  await draft.locator("button", { hasText: "Customize" }).click();
+  await draft.locator('input[data-key="options"]').fill("2");
+  await draft.locator('input[data-key="years"]').fill("3");
+  check(/two \(2\) options to extend the Term for three \(3\) years each/.test(await draft.locator(".draft-preview").textContent()), "draft preview updates as you type");
+  await draft.locator("button", { hasText: "Insert at cursor" }).click();
+  await page.waitForTimeout(300);
+  s = await docState(page);
+  const drafted = s.current.findIndex((t) => /Tenant shall have two \(2\) options to extend the Term for three \(3\) years each/.test(t));
+  check(drafted !== -1 && s.tracked[drafted], "drafted clause inserted at the cursor as a tracked change");
+
+  // My clauses (the drafted clause went in after the selected paragraph, so find the estoppel paragraph by its text)
+  await select((await docState(page)).current.indexOf(Demo.lease.paragraphs[18]));
+  await pane.locator("#my-clause-title").fill("Estoppel - their form");
+  await pane.locator("#btn-save-clause").click();
+  await pane.locator("#my-clauses li", { hasText: "Estoppel - their form" }).waitFor();
+  const saved = await frame().evaluate(() => JSON.parse(localStorage.getItem("clauseCraft.myClauses.v1") || "[]"));
+  check(saved.length === 1 && saved[0].text === Demo.lease.paragraphs[18], "selected text saved to My clauses on this computer");
+  const before = (await docState(page)).count;
+  await pane.locator("#my-clauses li", { hasText: "Estoppel - their form" }).locator("button", { hasText: "Insert" }).click();
+  await page.waitForTimeout(300);
+  check((await docState(page)).count === before + 1, "saved clause inserted back into the document");
+
+  // Explain selection
+  await pane.locator("#tab-ask").click();
+  await select(12, 0, 40);
+  await pane.locator("#btn-explain").click();
+  const ans = pane.locator(".msg.a").last();
+  await ans.waitFor();
+  check(/Assignment & subletting/.test(await ans.textContent()) && /Flagged here/.test(await ans.textContent()), "Explain describes the clause in plain English and lists what's flagged");
+
+  // Issues list with deal notes
+  await pane.locator("#tab-review").click();
+  await pane.locator("#btn-setup-edit").click();
+  await pane.locator("#deal-notes").fill("Tenant wants keys by Dec 1.");
+  await pane.locator("#tab-summary").click();
+  await pane.locator("#btn-issues").click();
+  await pane.locator("#issues li").first().waitFor();
+  const expectedIssues = Engine.issuesList((await docState(page)).current, { perspective: "tenant" }).items.length;
+  check(await pane.locator("#issues li").count() === expectedIssues, `issues list built (${expectedIssues} items)`);
+  await pane.locator("#btn-issues-end").click();
+  await page.waitForTimeout(300);
+  s = await docState(page);
+  const head = s.current.indexOf("TENANT'S COMMENTS ON THE LEASE");
+  check(head !== -1 && s.bold[head] && !s.tracked[head] && s.current[head + 2] === "Deal notes: Tenant wants keys by Dec 1.", "issues list inserted at the end with your deal notes");
+
+  // Review type, jurisdiction and playbook choice
+  await pane.locator("#tab-review").click();
+  await pane.locator("#review-type").selectOption("quick");
+  await page.waitForTimeout(300);
+  const quick = Engine.review((await docState(page)).current, { perspective: "tenant", reviewType: "quick" });
+  check(await pane.locator("#findings .card").count() === quick.findings.length && (await pane.locator("#findings .card .badge").allTextContents()).every((t) => t === "High"), "Quick review shows only high risks");
+  check(await pane.locator("#setup-fields").isVisible(), "setup stays open while you change it (results update underneath)");
+  await pane.locator("#review-type").selectOption("comprehensive");
+  await page.waitForTimeout(200);
+  await pane.locator("#jurisdiction").selectOption("other");
+  await page.waitForTimeout(300);
+  check(await pane.locator("#missing .card h4", { hasText: "CASp" }).count() === 0 && /Another U\.S\. state/.test(await pane.locator("#setup-summary-text").textContent()), "another state: California-only checks drop out");
+  await pane.locator("#playbook-choice").selectOption("none");
+  await page.waitForTimeout(300);
+  await pane.locator("#tab-playbook").click();
+  check(/Playbook is off/.test(await pane.locator("#pb-side").textContent()) && await pane.locator("#pb-items .card").count() === 0, "playbook can be switched off in the setup");
+  await pane.locator("#tab-review").click();
+  await pane.locator("#btn-run").click();
+  await page.waitForTimeout(300);
+  check(await pane.locator("#setup-fields").isHidden() && await pane.locator("#setup-summary").isVisible(), "Start review folds the setup away again");
+  await page.locator(".canvas").evaluate((el) => { el.scrollTop = 0; });
+  await page.screenshot({ path: join(SHOTS, "word-04-setup.png") });
+  await page.close();
+}
+
+/* ------------------------------------------------------------------ */
 console.log("F. Task pane at narrow width");
 {
   const { page, pane } = await open("?api=1.4");
@@ -255,6 +387,13 @@ console.log("F. Task pane at narrow width");
   const frame = page.frames().find((f) => f.url().includes("taskpane.html"));
   const overflow = await frame.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   check(overflow <= 0, "no horizontal scroll in a 380px task pane");
+  await page.evaluate(() => { document.querySelector(".main").style.gridTemplateColumns = "1fr 220px 320px"; });
+  await page.waitForTimeout(200);
+  for (const tab of ["review", "ask", "draft", "playbook", "summary"]) {
+    await pane.locator("#tab-" + tab).click();
+    const o = await frame.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    check(o <= 0, "no horizontal scroll in a 320px task pane (" + tab + " tab)");
+  }
   await page.setViewportSize({ width: 1180, height: 900 });
   await page.close();
 }

@@ -19,12 +19,13 @@
       </div>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn btn-ghost" id="btn-load-demo" title="Load demo Southern OC office lease">Load Demo Lease</button>
+      <button type="button" class="btn btn-ghost" id="btn-load-demo" title="Load the demo Southern OC office lease">Load Demo Lease</button>
       <label class="btn btn-ghost file-label" id="file-label" tabindex="0" role="button" title="Open a .docx, .txt or .md contract (stays on this computer)">
         Upload
         <input type="file" id="file-input" accept=".docx,.txt,.md,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown" hidden />
       </label>
-      <button type="button" class="btn btn-ghost" id="btn-export">Export HTML</button>
+      <button type="button" class="btn btn-ghost" id="btn-docx" title="Download a Word file with your redlines as tracked changes">Download .docx</button>
+      <button type="button" class="btn btn-ghost" id="btn-export" title="Download the redline as a web page">Export HTML</button>
       <button type="button" class="btn btn-ghost" id="btn-print">Print</button>
       <button type="button" class="btn btn-primary" id="btn-run-review">Run Review</button>
     </div>
@@ -60,64 +61,174 @@
     </section>
 
     <aside class="sidebar" aria-label="Clause Craft review panel">
-      <nav class="sidebar-tabs" role="tablist">
-        <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="review">Review</button>
-        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="clauses">Clauses</button>
+      <nav class="sidebar-tabs" role="tablist" aria-label="Clause Craft">
+        <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="review">Review <span class="tab-count" id="count-review"></span></button>
         <button type="button" class="tab" role="tab" aria-selected="false" data-tab="ask">Ask</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="draft">Draft</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="playbook">Playbook <span class="tab-count" id="count-playbook"></span></button>
         <button type="button" class="tab" role="tab" aria-selected="false" data-tab="summary">Summary</button>
       </nav>
 
       <div class="sidebar-body">
+        <!-- REVIEW -->
         <div class="tab-panel active" id="panel-review" role="tabpanel">
-          <div class="panel-intro">
-            <h2>Contract Review</h2>
-            <p>Scan this document for common CRE lease &amp; PSA clauses. Rule-based heuristics — no cloud, no API keys.</p>
-            <button type="button" class="btn btn-primary btn-block" id="btn-run-review-side">Run Review</button>
+          <form class="panel-intro setup" id="review-setup" aria-label="Review setup">
+            <div class="setup-summary" id="setup-summary" hidden>
+              <span id="setup-summary-text"></span>
+              <button type="button" class="linkish" id="btn-setup-edit">Change</button>
+            </div>
+            <div id="setup-fields">
+              <h2>Contract Review</h2>
+              <p>Rule-based review of CRE leases and purchase agreements. Runs on this computer — no cloud, no API keys.</p>
+              <div class="setup-grid">
+                <label class="cc-field">
+                  <span>Review type</span>
+                  <select id="review-type">
+                    <option value="comprehensive">Comprehensive</option>
+                    <option value="quick">Quick (high risks only)</option>
+                    <option value="drafting">Drafting check</option>
+                  </select>
+                </label>
+                <label class="cc-field">
+                  <span>Your party</span>
+                  <select id="perspective" aria-label="The party you represent">
+                    <option value="auto">Auto (from document)</option>
+                    <option value="tenant">Tenant</option>
+                    <option value="landlord">Landlord</option>
+                    <option value="buyer">Buyer</option>
+                    <option value="seller">Seller</option>
+                    <option value="neutral">Both sides (neutral)</option>
+                  </select>
+                </label>
+                <label class="cc-field">
+                  <span>Jurisdiction</span>
+                  <select id="jurisdiction">
+                    <option value="auto">Detect from document</option>
+                    <option value="ca">California</option>
+                    <option value="other">Another U.S. state</option>
+                  </select>
+                </label>
+                <label class="cc-field">
+                  <span>Playbook</span>
+                  <select id="playbook-choice">
+                    <option value="mine">My standards</option>
+                    <option value="none">None</option>
+                  </select>
+                </label>
+              </div>
+              <label class="cc-field">
+                <span>Deal notes <em class="optional">(optional, kept with this document)</em></span>
+                <textarea id="deal-notes" rows="2" placeholder="Deal context, e.g. tenant needs to close the lease by Dec 1; landlord is firm on the deposit."></textarea>
+              </label>
+              <button type="submit" class="btn btn-primary btn-block" id="btn-run-review-side">Start review</button>
+            </div>
+          </form>
+
+          <div class="panel-intro getting-started" id="review-empty">
+            <h2>Getting started</h2>
+            <ul class="quick-start">
+              <li><button type="button" class="qs-item" id="qs-review"><span class="qs-mark" aria-hidden="true">§</span>Review the document</button></li>
+              <li><button type="button" class="qs-item" id="qs-draft"><span class="qs-mark" aria-hidden="true">+</span>Draft a new clause</button></li>
+              <li><button type="button" class="qs-item" id="qs-playbook"><span class="qs-mark" aria-hidden="true">✓</span>Run your playbook</button></li>
+            </ul>
+            <p class="hint">Open your own contract with Upload, or try a demo:</p>
+            <div class="btn-row">
+              <button type="button" class="btn btn-ghost btn-sm" data-demo="lease">Demo lease</button>
+              <button type="button" class="btn btn-ghost btn-sm" data-demo="psa">Demo PSA</button>
+            </div>
           </div>
+
           <div id="review-stats" class="review-stats hidden"></div>
-          <div id="review-results" class="review-results"></div>
-        </div>
-
-        <div class="tab-panel" id="panel-clauses" role="tabpanel" hidden>
-          <div class="panel-intro">
-            <h2>Detected Clauses</h2>
-            <p>Click a clause to jump and highlight it. Accept applies a redline suggestion; Reject dismisses.</p>
+          <div class="review-toolbar" id="review-toolbar" hidden>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-review-selection" title="Show only the issues in the paragraphs you have selected">Review selection</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-accept-all" title="Apply every suggested redline shown below">Accept all</button>
+            <span class="scope-text" id="scope-text" hidden></span>
+            <button type="button" class="linkish" id="btn-scope-clear" hidden>Show all</button>
           </div>
-          <div id="clause-list" class="clause-list"></div>
+          <div id="review-results" class="review-results"></div>
+          <h3 class="cc-section" id="checks-title" hidden>Document checks</h3>
+          <ul class="checks" id="checks"></ul>
         </div>
 
+        <!-- ASK -->
         <div class="tab-panel" id="panel-ask" role="tabpanel" hidden>
           <div class="panel-intro">
             <h2>Ask the Document</h2>
-            <p>Keyword-matched CRE Q&amp;A over the current text. Try the chips or type your own.</p>
-            <div class="ask-chips">
-              <button type="button" class="chip" data-q="Who can terminate?">Who can terminate?</button>
-              <button type="button" class="chip" data-q="What's the NNN?">What's the NNN?</button>
-              <button type="button" class="chip" data-q="Summarize risks">Summarize risks</button>
-              <button type="button" class="chip" data-q="What is the rent?">What is the rent?</button>
-              <button type="button" class="chip" data-q="Governing law?">Governing law?</button>
-              <button type="button" class="chip" data-q="Insurance requirements?">Insurance?</button>
-            </div>
+            <p>Answers come from this document's own language, with the section cited. Click a citation to jump there.</p>
+            <button type="button" class="btn btn-ghost btn-sm btn-explain" id="btn-explain" title="Explain the selected text, or the paragraph the cursor is in">Explain selected text</button>
+            <div class="ask-chips" id="ask-chips"></div>
           </div>
           <div id="ask-chat" class="ask-chat" aria-live="polite"></div>
           <form id="ask-form" class="ask-form">
-            <input type="text" id="ask-input" placeholder="Ask about this lease or PSA…" autocomplete="off" />
+            <input type="text" id="ask-input" placeholder="Ask about this lease or PSA…" autocomplete="off" aria-label="Question" />
             <button type="submit" class="btn btn-primary">Ask</button>
           </form>
         </div>
 
+        <!-- DRAFT -->
+        <div class="tab-panel" id="panel-draft" role="tabpanel" hidden>
+          <div class="library-filter" role="group" aria-label="Contract type">
+            <button type="button" class="chip is-active" data-lib="lease">Lease</button>
+            <button type="button" class="chip" data-lib="psa">Purchase agreement</button>
+          </div>
+          <h3 class="cc-section">Draft with your numbers</h3>
+          <p class="hint">Fill in the business terms and Clause Craft writes the clause in contract style. It goes in after the paragraph your cursor is in, marked as an insertion.</p>
+          <ul class="library" id="drafts"></ul>
+          <h3 class="cc-section">Clause library</h3>
+          <p class="hint">Starting-point language to insert as-is.</p>
+          <ul class="library" id="library"></ul>
+          <h3 class="cc-section">My clauses</h3>
+          <p class="hint">Select language you like in any document and save it here to reuse. Saved on this computer.</p>
+          <div class="save-clause">
+            <input type="text" id="my-clause-title" placeholder="Name it (optional)" aria-label="Name for the saved clause" />
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-save-clause">Save selection</button>
+          </div>
+          <ul class="library" id="my-clauses"></ul>
+        </div>
+
+        <!-- PLAYBOOK -->
+        <div class="tab-panel" id="panel-playbook" role="tabpanel" hidden>
+          <div class="panel-intro">
+            <h2>Playbook</h2>
+            <p>Your standards for this side of the deal, checked against the document. Set the numbers the way you negotiate; they stay on this computer.</p>
+            <div class="pb-head">
+              <span class="pb-side" id="pb-side">Run a review first.</span>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-pb-edit" aria-expanded="false">Edit standards</button>
+            </div>
+          </div>
+          <div class="pb-editor" id="pb-editor" hidden></div>
+          <div class="stat-row pb-stats" id="pb-stats" hidden></div>
+          <div id="pb-items" class="review-results" aria-live="polite"></div>
+        </div>
+
+        <!-- SUMMARY -->
         <div class="tab-panel" id="panel-summary" role="tabpanel" hidden>
           <div class="panel-intro">
             <h2>Agreement Summary</h2>
-            <p>One-click plain-language overview of parties, term, money, and key risks.</p>
+            <p>One-click plain-language overview of parties, term, money and key risks.</p>
             <button type="button" class="btn btn-primary btn-block" id="btn-summary">Generate Summary</button>
           </div>
           <div id="summary-output" class="summary-output"></div>
+
+          <div class="panel-intro section-gap">
+            <h2>Issues list for the other side</h2>
+            <p>Every flagged item with the change you want, numbered in document order. Your deal notes go at the top.</p>
+            <button type="button" class="btn btn-ghost btn-block" id="btn-issues">Build issues list</button>
+          </div>
+          <ol class="issues" id="issues"></ol>
+          <div class="btn-row" id="issues-actions" hidden>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-issues-end">Insert at end</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-issues-copy">Copy</button>
+          </div>
+
+          <h3 class="cc-section">Clauses in this document</h3>
+          <p class="hint" id="clauses-hint">Run a review to list the clauses Clause Craft recognizes. Click one to jump to it.</p>
+          <div id="clause-list" class="clause-list"></div>
         </div>
       </div>
 
       <footer class="sidebar-footer">
-        <p class="disclaimer">Demo only — not legal advice. Have counsel review before signing.</p>
+        <p class="disclaimer">Demo only — not legal advice. Have counsel review before signing. <span id="version"></span></p>
       </footer>
     </aside>
   </main>

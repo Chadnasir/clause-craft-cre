@@ -269,6 +269,15 @@
     var self = this;
     this.context._push(function () { var loc = self._resolve(); D.selection = { para: loc.para, start: loc.start, end: loc.end }; });
   };
+  /* Paragraphs touched by this range (the mock's ranges never span paragraphs). */
+  Object.defineProperty(Range.prototype, "paragraphs", {
+    get: function () {
+      var self = this;
+      var coll = new ParagraphCollection(this.context);
+      coll._filter = function () { return [self._resolve().para]; };
+      return coll;
+    }
+  });
   Range.prototype.getReviewedText = function (version) {
     if (!apiAtLeast("1.4")) throw apiNotFound("Range.getReviewedText");
     var self = this, res = new ClientResult();
@@ -344,7 +353,7 @@
     var self = this, list = parseProps(props);
     var wantText = list.some(function (x) { return x === "*" || x === "text" || x === "items/text"; });
     this.context._push(function () {
-      self._vals.items = D.paragraphs.map(function (p) {
+      self._vals.items = (self._filter ? self._filter() : D.paragraphs).map(function (p) {
         var para = new Paragraph(self.context, function () { return p; });
         if (wantText) { para._vals.text = visibleText(p); para._loaded.text = true; }
         return para;
