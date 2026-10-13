@@ -31,7 +31,13 @@ Covers office and retail leases and purchase and sale agreements / escrow instru
 
 The add-in's pages are served by GitHub Pages from the `gh-pages` branch (https://chadnasir.github.io/clause-craft-cre/word/taskpane.html). Word needs an internet connection to open the pane; the review itself runs inside Word.
 
-**Word for Windows (desktop)**: double-click `Install in Word.cmd` (in the Windows download, or in `windows/` here). It registers the add-in for your Windows user, the same way Microsoft's own `office-addin-dev-settings` tool does (`HKCU\Software\Microsoft\Office\16.0\WEF\Developer`). No admin rights needed. Close every Word window, reopen Word, then Home > **Review Contract**. `Uninstall from Word.cmd` removes it.
+**Word for Windows (desktop), one line**: press Windows + R, paste the line below, press Enter. It saves Clause Craft to Documents\Clause Craft, adds it to Word and opens Word with the panel showing (if Word is open it asks, then restarts it).
+
+```
+powershell -c "irm https://chadnasir.github.io/clause-craft-cre/install.ps1|iex"
+```
+
+**Or from the download**: double-click `Install in Word.cmd`. It registers the add-in for your Windows user, the same way Microsoft's own `office-addin-dev-settings` tool does (`HKCU\Software\Microsoft\Office\16.0\WEF\Developer`), with no admin rights needed. Then it opens `Clause Craft Demo Lease.docx`, which is tagged to open the Clause Craft panel. After that, open any document and click Home > **Review Contract**. `Uninstall from Word.cmd` removes it.
 
 **Word on the web**: open a document, then Home > Add-ins > More Settings > **Upload My Add-in** > Browse to `Clause Craft manifest.xml` (or `word/manifest.xml`) > **Upload**. Word on the web keeps it until that browser's cache is cleared.
 
@@ -69,6 +75,7 @@ Contract text stays on the computer. The only files loaded from the internet are
 | `word/taskpane.*`, `word/commands.html`, `word/assets/` | Word task pane and ribbon icons |
 | `index.html`, `app.js`, `styles.css` | Browser version |
 | `windows/` | `Install in Word.cmd`, `Uninstall from Word.cmd`, `START HERE.html` for the Windows download |
+| `install.ps1` | One-line setup for Windows (downloads the zip, then runs `Install in Word.cmd`) |
 | `tools/package.mjs` | Builds `dist/Clause-Craft-for-Windows.zip` and the files behind the download page |
 | `download/` | Download page with install steps, the Windows zip and the add-in manifest (served by GitHub Pages) |
 | `tests/` | Engine tests, Word add-in tests (Office.js simulator), browser tests, .docx fixtures |

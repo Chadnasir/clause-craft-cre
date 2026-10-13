@@ -21,6 +21,15 @@
     .btn-dl:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
     .btn-dl svg { width: 22px; height: 22px; }
     .cta small { opacity: 0.85; }
+    .quick { background: #fff; border: 2px solid var(--orange); border-radius: 12px; padding: 16px 18px; }
+    .quick h2 { margin: 0 0 4px; }
+    .quick ol { margin: 8px 0 0; padding-left: 22px; }
+    .quick li { margin: 6px 0; }
+    .cmd { display: flex; gap: 8px; align-items: stretch; margin: 8px 0 4px; }
+    .cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; padding: 10px 12px; border-radius: 8px; background: #0F172A; color: #F8FAFC; font: 0.86rem/1.4 Consolas, "Cascadia Mono", monospace; }
+    .copy { flex-shrink: 0; padding: 0 14px; border: 0; border-radius: 8px; background: var(--navy); color: #fff; font-weight: 700; cursor: pointer; }
+    .copy:hover { background: #163A6B; }
+    kbd { padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: #fff; font: 0.85rem "Segoe UI", sans-serif; }
     main { padding: 22px 16px 40px; }
     h2 { font-size: 1.12rem; color: var(--navy); margin: 26px 0 10px; }
     ol.steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -56,15 +65,26 @@
   </header>
 
   <main class="wrap">
-    <h2>Add it to Word on your PC (about 1 minute)</h2>
+    <div class="quick">
+      <h2>Fastest: one line, no unzipping</h2>
+      <ol>
+        <li>Press <kbd>Windows</kbd> + <kbd>R</kbd>.</li>
+        <li>Paste this line, then press <kbd>Enter</kbd>:
+          <div class="cmd"><code id="cmd">powershell -c "irm https://chadnasir.github.io/clause-craft-cre/install.ps1|iex"</code><button type="button" class="copy" id="copy">Copy</button></div>
+        </li>
+        <li>If Word is open, save your work and press <kbd>Y</kbd> when asked. Word restarts with Clause Craft open on the right.</li>
+      </ol>
+      <p class="note">It saves Clause Craft to <b>Documents › Clause Craft</b> and adds it to Word for your Windows user only. No admin rights are needed, and nothing else on your PC is changed.</p>
+    </div>
+
+    <h2>Or download the ZIP</h2>
     <ol class="steps">
       <li><b class="t">Download</b>Click <b>Download for Windows</b> above. The file goes to your <b>Downloads</b> folder.</li>
-      <li><b class="t">Unzip</b>Open <b>Downloads</b>, right-click <span class="file">Clause-Craft-for-Windows</span>, choose <b>Extract All</b>, then <b>Extract</b>. A <span class="file">Clause Craft</span> folder opens.</li>
-      <li><b class="t">Plug it into Word</b>In that folder, double-click <span class="file">Install in Word</span>. When it says Clause Craft is installed, press any key to close the window.
-        <p class="note">If Windows shows "Windows protected your PC", click <b>More info</b>, then <b>Run anyway</b>. If it asks "Do you want to run this file?", click <b>Run</b>.</p></li>
-      <li><b class="t">Restart Word</b>Close every Word window, then open Word again and open a lease or purchase agreement.</li>
-      <li><b class="t">Open Clause Craft</b>On the <b>Home</b> tab, click <b>Review Contract</b>. The Clause Craft panel opens on the right.</li>
+      <li><b class="t">Unzip</b>Right-click <span class="file">Clause-Craft-for-Windows</span> in Downloads, choose <b>Extract All</b>, then <b>Extract</b>.</li>
+      <li><b class="t">Double-click Install in Word</b>Word opens with the Clause Craft panel on the right, on a demo lease. If Word was open, press <kbd>Y</kbd> to restart it first.
+        <p class="note">If Windows shows "Windows protected your PC", click <b>More info</b>, then <b>Run anyway</b>.</p></li>
     </ol>
+    <p>After that, open any lease or PSA and click <b>Home &rsaquo; Review Contract</b>.</p>
 
     <h2>Word on the web (OneDrive)</h2>
     <div class="card">
@@ -90,5 +110,13 @@
   </main>
 
   <footer>Clause Craft is a rule-based first pass, not legal advice. Have counsel review before signing.</footer>
+  <script>
+    document.getElementById("copy").addEventListener("click", function () {
+      var btn = this, text = document.getElementById("cmd").textContent;
+      function done(ok) { btn.textContent = ok ? "Copied" : "Select and copy"; setTimeout(function () { btn.textContent = "Copy"; }, 2000); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      else done(false);
+    });
+  </script>
 </body>
 </html>
